@@ -1,13 +1,8 @@
+# Each route describes how an incoming URL is going to be processed by Platform.sh.
+"https://www.{default}/":
+    type: upstream
+    upstream: "ndadrop:http"
+
 "https://{default}/":
-  cache:
-    cookies:
-    - '*'
-    default_ttl: 0
-    enabled: true
-    headers:
-    - Accept
-    - Accept-Language
-  ssi:
-    enabled: false
-  type: upstream
-  upstream: ndadrop:http
+    type: redirect
+    to: "https://www.{default}/"
