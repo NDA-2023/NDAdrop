@@ -17,10 +17,6 @@ hooks:
 disk: 512
 
 web:
-  commands: 
-    start: "npm run dev"
-
-web:
   locations:
     "/frontend/ndadrop/":
       root: "dist"
