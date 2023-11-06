@@ -1,4 +1,8 @@
-"https://{default}/":
+https://{default}/:
+  to: http://{default}/
+  type: redirect
+
+http://{default}/:
   cache:
     cookies:
     - '*'
@@ -10,4 +14,4 @@
   ssi:
     enabled: false
   type: upstream
-  upstream: ndadrop:http
+  upstream: ui:http

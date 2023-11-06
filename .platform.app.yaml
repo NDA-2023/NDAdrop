@@ -9,9 +9,9 @@ name: ndadrop
 # to find the supported versions for the 'nodejs' type.
 type: 'nodejs:20'
 
-hooks:
-    build: |
-        npm install 
+build:
+    flavor: none
+
 
 # The size of the persistent disk of the application (in MB).
 disk: 512
