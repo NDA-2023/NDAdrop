@@ -1,42 +1,27 @@
-name: ui
+# The name of this app. Must be unique within a project.
+name: ndadrop
 
-# The toolstack used to build the application.
-type: nodejs:10
+# The runtime the application uses. The 'type' key defines the base container
+# image that will be used to run the application. There is a separate base
+# container image for each primary language for the application,
+# in multiple versions. Check the JavaScript/Node.js documentation
+# (https://docs.platform.sh/languages/nodejs.html#supported-versions)
+# to find the supported versions for the 'nodejs' type.
+type: 'nodejs:20'
 
 build:
     flavor: none
 
-# The configuration of app when it is exposed to the web.
-web:
-    locations:
-        "/":
-            root: "build_platform"
-            index:
-                - "index.html"
-            expires: 300s
-            scripts: true
-            allow: false
-            rules:
-                \.(css|js|gif|jpe?g|png|ttf|eot|woff2?|otf|html|ico|svg?)$:
-                    allow: true
-                ^/robots\.txt$:
-                    allow: true
 
+# The size of the persistent disk of the application (in MB).
 disk: 512
 
-mounts:
-  '/build_platform': 'shared:files/build_platform'
-  '/.tmp_platformsh': 'shared:files/tmp_platformsh'
-
-dependencies:
-  nodejs:
-    yarn: "*"
-
-# The hooks that will be performed when the package is deployed.
-hooks:
-    build: |
-      set -e
-      yarn install
-      npm run build
-    deploy: |
-      npm run buildenvvar
+web:
+  locations:
+    "/frontend/ndadrop/":
+      root: "dist"
+      index:
+        - "index.html"
+      passthru: /index.html
+  commands: 
+    start: "npm run dev"
