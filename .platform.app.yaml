@@ -9,19 +9,23 @@ name: ndadrop
 # to find the supported versions for the 'nodejs' type.
 type: 'nodejs:20'
 
-# The following block defines a single writable directory, 'web/uploads'
-# The 'source' specifies where the writable mount is. The 'local' source
-# indicates that the mount point will point to a local directory on the
-# application container. The 'source_path' specifies the subdirectory
-# from within the source that the mount should point at. 
-mounts:
-  'frontend/ndadrop':
-    source: local
-    source_path: ndadrop
+hooks:
+    build: |
+        npm install 
 
 # The size of the persistent disk of the application (in MB).
-disk: 2048
+disk: 512
 
 web:
+  commands: 
+    start: "npm run dev"
+
+web:
+  locations:
+    "/frontend/ndadrop/":
+      root: "dist"
+      index:
+        - "index.html"
+      passthru: /index.html
   commands: 
     start: "npm run dev"
