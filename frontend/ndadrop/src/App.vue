@@ -1,6 +1,25 @@
-<script setup lang="ts">
+<script lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import TopBar from './components/TopBar.vue'
+import { usePeersStore } from './stores/PeersStore';
+import { useChatStore } from './stores/ChatStore';
+
+export default {
+  components: {
+    TopBar: TopBar
+  },
+  // computed: {
+  //   ...mapState(usePeersStore, ['peers'])
+  // },
+  created() {
+    const peers = usePeersStore()
+    peers.addNewPeer("Me: Maties Claesen", false, true);
+    peers.addNewPeer("Yarne Dirkx", true, false);
+
+    const chat = useChatStore()
+    chat.addMessage(peers.getPeerViaIndex(1), "Interlinked");
+  }
+}
 </script>
 
 <template>

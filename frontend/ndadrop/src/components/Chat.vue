@@ -1,57 +1,92 @@
 <script lang="ts">
+import MessageVue from './Message.vue';
+import { mapState } from 'pinia'
+import { usePeersStore } from '@/stores/PeersStore'
+import { useChatStore } from '@/stores/ChatStore';
+
+export default {
+  components: {
+    MessageVue: MessageVue
+  },
+  computed: {
+    ...mapState(useChatStore, ['messages'])
+  },
+  // props: {
+  //     peers: {
+  //         type: Array<Peer>,
+  //         required: true
+  //     }
+  // },
+  data() {
+    return {
+      typedMessage: "" as string
+    }
+  },
+  created() {
+  },
+  methods: {
+    sendMessage() {
+      const peers = usePeersStore();
+      const chat = useChatStore();
+      chat.addMessage(peers.getPeerViaIndex(0), this.typedMessage);
+      this.typedMessage = "";
+    }
+  }
+}
 </script>
 
 <template>
-    <div class="gray">
-
+  <div class="list-group">
+    <div class="chat-background overflow-scroll">
+      <div v-for="message in messages">
+        <MessageVue :message=message />
+      </div>
     </div>
-    <div class="message-control">
-        <textarea class="form-control message" placeholder="Aa" id="description" rows="1" v-model="message"></textarea>
-        <button class="btn btn-link message-button">
-            <img src="@/assets/send-message.svg" width="40" height="40"/>
-        </button>
-    </div>
+  </div>
+  <div class="message-control">
+    <!-- v-model="message" -->
+    <textarea class="form-control message" placeholder="Aa" id="description" rows="1" v-model="typedMessage"></textarea>
+    <button class="btn btn-link message-button" @click="sendMessage">
+      <img src="@/assets/send-message.svg" width="40" height="40" />
+    </button>
+  </div>
 </template>
 
 <style scoped>
-
-.gray {
-    background-color: #ececec;
-    height: calc(85vh - 200px);
-    margin: 1rem -1rem 0 -1rem;
+.chat-background {
+  background-color: #ececec;
+  height: calc(85vh - 200px);
+  margin: 1rem -1rem 0 -1rem;
 }
 
 @media (min-height: 700px) {
-    .gray {
-        margin: 1rem -1rem;
-    }
+  .chat-background {
+    margin: 1rem -1rem;
+  }
 }
 
 @media (min-width: 700px) {
-    .gray {
-        height: calc(85vh - 100px);
-        margin: 1rem;
-        border-radius: 15px
-    }
+  .chat-background {
+    height: calc(75vh - 100px);
+    margin: 1rem;
+    border-radius: 15px
+  }
 }
 
 .green {
-    background-color: hsla(160, 100%, 37%, 1);
-    border: none;
+  background-color: hsla(160, 100%, 37%, 1);
+  border: none;
 }
 
 .message-control {
-    display: flex;
-    margin: auto 0 1rem 1rem;
+  display: flex;
+  margin: auto 0 1rem 1rem;
 }
 
 .message {
-    /* width: 400px; */
-    margin: auto 0 auto auto;
+  /* width: 400px; */
+  margin: auto 0 auto auto;
 }
 
-.message-button {
-
-}
-
+.message-button {}
 </style>
