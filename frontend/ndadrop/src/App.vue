@@ -15,6 +15,8 @@ export default {
     const peers = usePeersStore()
     peers.addNewPeer("Me: Maties Claesen", false, true);
     peers.addNewPeer("Yarne Dirkx", true, false);
+    peers.addNewPeer("Lise Verbeeck", false, false);
+    peers.addNewPeer("Danny Grispen", false, false);
 
     const chat = useChatStore()
     chat.addMessage(peers.getPeerViaIndex(1), "Interlinked");

@@ -9,6 +9,14 @@ export default {
       required: true
     }
   },
+  computed: {
+    isItMe() {
+      return this.message.getPeer().isMe();
+    },
+    isSelected() {
+      return this.message.getPeer().isSelected();
+    }
+  },
   methods: {
         ft(timestamp: Date) {
             return formatTime(timestamp);
@@ -19,7 +27,7 @@ export default {
 
 <template>
   <div v-if="true">
-    <div class="list-group-item list-group-item-action message" aria-current="true">
+    <div :class="'list-group-item list-group-item-action message ' + (isItMe ? 'blue ' : ' ') + (isSelected ? 'green ' : ' ')" aria-current="true">
       <div class="ms-2 me-auto">
         <div class="fw-bold"> {{ message.getPeer().getName() }} <span class="badge bg-primary rounded-pill"> {{ ft(message.getTimestamp()) }} </span> </div>
         {{ message.getContents() }}
@@ -43,5 +51,14 @@ export default {
 .green {
   background-color: hsla(160, 100%, 37%, 1);
   border: none;
+  color: #ececec;
+  padding: 0.5rem 0;
+}
+
+.blue {
+  background-color: rgb(14, 175, 233);
+  border: none;
+  color: #ececec;
+  padding: 0.5rem 0;
 }
 </style>

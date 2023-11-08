@@ -26,6 +26,9 @@ export const usePeersStore = defineStore('peers', {
       if (index > -1) {
         this.peers.splice(index, 1);
       }
+    },
+    getSelectedPeers() {
+      return this.peers.filter((peer) => {return peer.isSelected()});
     }
   }
 })
