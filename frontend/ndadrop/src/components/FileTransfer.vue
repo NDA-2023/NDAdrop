@@ -20,10 +20,16 @@ export default {
     hasFile: false,
     fileName: "",
     sendingFiles: [] as Array<SendingFile>,
-    popover: null as Popover,
+    popover: null as Popover | null,
   }),
+  computed: {
+    computedSendingFiles() {
+      let sendFiles: Array<SendingFile> = this.sendingFiles as Array<SendingFile>;
+      return sendFiles;
+    }
+  },
   mounted() {
-    this.popover = new Popover(this.$refs.fileInfoPopover);
+    this.popover = new Popover(this.$refs.fileInfoPopover as Element);
   },
   methods: {
     fileButtonClicked() {
@@ -34,19 +40,26 @@ export default {
       }
     },
     chooseFile() {
-      document.getElementById("fileUpload").click()
+      const fileUpload = document.getElementById("fileUpload");
+      if (fileUpload !== null)
+        fileUpload.click();
     },
     fileChange(event: any) {
       this.hasFile = event.target.files.length != 0;
       if (this.hasFile) {
         this.fileName = event.target.files[0].name;
-        this.popover.show();
+        if (this.popover !== null)
+          this.popover.show();
       }
     },
     cancelFile() {
-      document.getElementById("fileUpload").value = "";
+      const fileUpload: HTMLElement | null = document.getElementById("fileUpload");
+      if (fileUpload !== null) {
+        (fileUpload as HTMLInputElement).value = "";
+      }
       this.hasFile = false;
-      this.popover.hide();
+      if (this.popover !== null)
+        this.popover.hide();
     },
     sendFile() {
       const peers = usePeersStore();
@@ -89,7 +102,7 @@ export default {
   </div>
 
   <div class="toast-container position-static position-fixed bottom-0 start-0 m-3">
-    <div v-for="sendingFile in sendingFiles">
+    <div v-for="sendingFile in computedSendingFiles">
       <FileUploadToast :sending-file="sendingFile" />
     </div>
   </div>

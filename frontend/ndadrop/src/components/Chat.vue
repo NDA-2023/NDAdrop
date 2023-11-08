@@ -3,13 +3,19 @@ import MessageVue from './Message.vue';
 import { mapState } from 'pinia'
 import { usePeersStore } from '@/stores/PeersStore'
 import { useChatStore } from '@/stores/ChatStore';
+import type { Peer } from '@/logic/Peer';
+import type { Message } from '@/logic/Message';
 
 export default {
   components: {
     MessageVue: MessageVue
   },
   computed: {
-    ...mapState(useChatStore, ['messages'])
+    ...mapState(useChatStore, ['messages']),
+    computedMessages() {
+      let messages : Array<Message> = this.messages as Array<Message>;
+      return messages;
+    }
   },
   // props: {
   //     peers: {
@@ -28,7 +34,7 @@ export default {
     sendMessage() {
       const peers = usePeersStore();
       const chat = useChatStore();
-      chat.addMessage(peers.getPeerViaIndex(0), this.typedMessage);
+      chat.addMessage(peers.getPeerViaIndex(0) as Peer, this.typedMessage);
       this.typedMessage = "";
     }
   }
@@ -38,7 +44,7 @@ export default {
 <template>
   <div class="list-group">
     <div class="chat-background overflow-scroll">
-      <div v-for="message in messages">
+      <div v-for="message in computedMessages">
         <MessageVue :message=message />
       </div>
     </div>

@@ -3,6 +3,7 @@ import { RouterLink, RouterView } from 'vue-router'
 import TopBar from './components/TopBar.vue'
 import { usePeersStore } from './stores/PeersStore';
 import { useChatStore } from './stores/ChatStore';
+import type { Peer } from './logic/Peer';
 
 export default {
   components: {
@@ -19,7 +20,7 @@ export default {
     peers.addNewPeer("Danny Grispen", false, false);
 
     const chat = useChatStore()
-    chat.addMessage(peers.getPeerViaIndex(1), "Interlinked");
+    chat.addMessage(peers.getPeerViaIndex(1) as Peer, "Interlinked");
   }
 }
 </script>
@@ -38,7 +39,7 @@ export default {
   </div>
 
   <RouterView v-slot="{ Component, route: String }">
-    <Transition :name="$route.meta.transition || 'fade'" mode="out-in">
+    <Transition name="fade" mode="out-in">
       <component :is="Component" :key="$route.path"></component>
     </Transition>
   </RouterView>

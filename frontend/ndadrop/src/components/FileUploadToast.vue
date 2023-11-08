@@ -13,12 +13,12 @@ export default {
         this.startRefreshing();
     },
     mounted() {
-        this.toast = new Toast(this.$refs.uploadToast);
+        this.toast = new Toast(this.$refs.uploadToast as Element);
         this.toast.show();
     },
     data: () => ({
         minutesAgo: "0 seconds ago",
-        toast: null as Toast,
+        toast: null as Toast | null,
         isComplete: false,
     }),
     methods: {
