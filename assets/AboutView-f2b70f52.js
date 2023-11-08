@@ -1,1 +1,0 @@
-import{_ as s,o,c as a,a as e,b as t}from"./index-56d48d22.js";const c={},_={class:"about"},n=e("div",null,[t(" Built by Claesen Maties & Dirkx Yarne."),e("br"),t(" This was made for the Masters Course called 'Network Design & Applications' ")],-1),r=[n];function i(l,d){return o(),a("div",_,r)}const f=s(c,[["render",i]]);export{f as default};
