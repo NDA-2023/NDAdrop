@@ -31,9 +31,9 @@ export default {
       <TopBar msg="NDA Drop" />
 
       <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/chat" class="chat">Chat</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
+        <RouterLink to="/NDAdrop/">Home</RouterLink>
+        <RouterLink to="/NDAdrop/chat" class="chat">Chat</RouterLink>
+        <RouterLink to="/NDAdrop/about">About</RouterLink>
       </nav>
     </header>
   </div>

@@ -1,26 +1,26 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import ChatView from '../views/ChatView.vue';
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
       redirect: { name: 'home' }
     },
     {
-      path: '/',
+      path: '/NDAdrop/',
       name: 'home',
       component: HomeView,
     },
     {
-      path: '/chat',
+      path: '/NDAdrop/chat',
       name: 'chat',
       component: ChatView,
     },
     {
-      path: '/about',
+      path: '/NDAdrop/about',
       name: 'about',
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
