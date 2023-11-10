@@ -13,7 +13,7 @@ type: nodejs:20
 # The configuration of app when it is exposed to the web.
 web:
   commands:
-   start: "node index.js"
+   start: "npm install & node index.js"
 
 # The size of the persistent disk of the application (in MB).
 disk: 512
