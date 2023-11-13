@@ -11,7 +11,7 @@ export default {
     },
     data() {
         return {
-            myName: "",
+            myName: this.peer.getName(),
         }
     },
     methods: {
