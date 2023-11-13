@@ -1,16 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
-    <!-- Include file-type library -->
-    <script type="module">
-        import fileType from 'https://cdn.jsdelivr.net/npm/file-type@18.7.0/+esm'
-    </script>
-    <!-- Include blob-util library -->
-    <script src="https://cdn.jsdelivr.net/npm/blob-util/dist/blob-util.min.js"></script>
-    <title>WebRTC NDADrop</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
+  <title>WebRTC NDADrop</title>
 </head>
 <body>
   <h1>WebRTC NDADrop</h1>
@@ -122,21 +116,18 @@
             // Your logic when the peer is connected
         });
 
-        newPeer.on('data', async (data) => {
+        newPeer.on('data', (data) => {
             // const text = new TextDecoder('utf-8').decode(data);
             // console.log('Received data:', text);
             // document.getElementById('data').textContent = 'Received data: ' + text;
             // Your logic for handling incoming data
             // Assuming the data is an object with fileName and content properties
-
-            // const blob = new Blob([data]);
-            // const downloadLink = document.createElement('a');
-            // downloadLink.href = URL.createObjectURL(blob);
-            // downloadLink.download = 'received_file.txt';
-            // downloadLink.click();
-            const { chunks, type } = data;
-            // Now you have received chunks and file type, you can process the file
-            await processReceivedFile(chunks, type);
+            
+            const blob = new Blob([data]);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = 'received_file.txt';
+            downloadLink.click();
         });
 
         newPeer.on('close', (data) => {
@@ -146,24 +137,6 @@
             // Your logic for handling incoming data
         });
         return newPeer;
-    }
-
-    // Function to process the received file
-    async function processReceivedFile(chunks, type) {
-        // You can now reconstruct the file and use the type information as needed
-        // For example, you can create a Blob from the chunks
-        const concatenatedChunks = new Uint8Array(
-            chunks.reduce((acc, chunk) => [...acc, ...new Uint8Array(chunk)], [])
-        ).buffer;
-
-        // Create a Blob with the correct type
-        const blob = new Blob([concatenatedChunks], { type: type.mime });
-
-        // Use the blob as needed, e.g., create a download link
-        const downloadLink = document.createElement('a');
-        downloadLink.href = URL.createObjectURL(blob);
-        downloadLink.download = 'received_file.' + type.ext;
-        downloadLink.click();
     }
 
     function initializeSenderPeer(otherUserUUID) {
@@ -178,7 +151,7 @@
             ws.send(JSON.stringify({ type: 'signal', data: data, to: otherUserUUID, from: uuid}));
         });
 
-        peer.on('connect', async () => {
+        peer.on('connect', () => {
             let senderID = getSenderIDOnPeer(peer);
             console.log('Peer connected: ',senderID);
             let senderPeer = peers.get(senderID);
@@ -189,15 +162,13 @@
             console.log('Sending file: ',file.name);
             if (file) {
                 // Read the file content as ArrayBuffer
-                // const reader = new FileReader();
-                // reader.onload = () => {
-                //     const content = reader.result;
-                //     // Send the file name and content to the other peer
-                //     senderPeer.send(content);
-                // };
-                // reader.readAsArrayBuffer(file);
-                const { chunks, type } = await convertFileToChunks(file);
-                senderPeer.send({ chunks, type });
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const content = reader.result;
+                    // Send the file name and content to the other peer
+                    senderPeer.send(content);
+                };
+                reader.readAsArrayBuffer(file);
             } else {
                 console.error('Please select a file.');
             }
@@ -217,24 +188,6 @@
             peers.delete(senderID);
         });
         return peer;
-    }
-
-    // Function to convert a file to chunks and handle file types
-    async function convertFileToChunks(file) {
-        const CHUNK_SIZE = 16 * 1024; // 16 KB chunks
-
-        const fileBuffer = await blobUtil.blobToArrayBuffer(file);
-
-        const chunks = [];
-        for (let offset = 0; offset < fileBuffer.byteLength; offset += CHUNK_SIZE) {
-            const chunk = fileBuffer.slice(offset, offset + CHUNK_SIZE);
-            chunks.push(chunk);
-        }
-
-        // Determine the file type
-        const type = await fileType.fromBuffer(chunks[0]);
-
-        return { chunks, type };
     }
 
     function startFileTransfer(otherUserId) {
