@@ -18,7 +18,7 @@ export default {
   // },
   data: () => ({
     hasFile: false,
-    fileName: "",
+    fileNames: [] as Array<string>,
     sendingFiles: [] as Array<SendingFile>,
     popover: null as Popover | null,
   }),
@@ -26,7 +26,19 @@ export default {
     computedSendingFiles() {
       let sendFiles: Array<SendingFile> = this.sendingFiles as Array<SendingFile>;
       return sendFiles;
-    }
+    },
+    /**
+     * returns all the fileNames in the fileNames array as a single string with ', ' between every fileName
+     * ex: ["file1","file2","file3"] -> "file1, file2, file3"
+     */
+    fileNameString() {
+      let fileNameString: string = ""
+      for (let i = 0; i < this.fileNames.length - 1; i++) {
+        fileNameString += this.fileNames[i] + ', ';
+      }
+      fileNameString += this.fileNames[this.fileNames.length - 1]
+      return fileNameString;
+    },
   },
   mounted() {
     this.popover = new Popover(this.$refs.fileInfoPopover as Element);
@@ -44,10 +56,12 @@ export default {
       if (fileUpload !== null)
         fileUpload.click();
     },
-    fileChange(event: any) {
+    fileSelected(event: any) {
       this.hasFile = event.target.files.length != 0;
       if (this.hasFile) {
-        this.fileName = event.target.files[0].name;
+        for (let i = 0; i < event.target.files.length; i++) {
+          this.fileNames.push(event.target.files[i].name);
+        }
         if (this.popover !== null)
           this.popover.show();
       }
@@ -64,9 +78,12 @@ export default {
     sendFile() {
       const peers = usePeersStore();
       peers.getSelectedPeers().forEach((peer) => {
-        this.sendingFiles.push(new SendingFile(this.fileName, peer as Peer));
+        this.fileNames.forEach((fileName: string) => {
+          this.sendingFiles.push(new SendingFile(fileName, peer as Peer));
+        })
       });
       this.cancelFile();
+      this.fileNames = [];
     }
   }
 }
@@ -88,17 +105,17 @@ export default {
   </div>
   <!-- file button -->
   <div class="bottom-sheet fixed-bottom">
-    <input type="file" id="fileUpload" hidden @change="fileChange" />
+    <input type="file" id="fileUpload" hidden @change="fileSelected" multiple />
     <button class="btn btn-success green add-file" @click="fileButtonClicked" data-bs-toggle="popover"
       data-bs-placement="top" data-bs-trigger="manual" data-bs-content="Select the peers you want to send the file to."
       ref="fileInfoPopover">
-      {{ !hasFile ? "Add File" : "Send File" }}
+      {{ !hasFile ? "Add File(s)" : "Send File(s)" }}
       <img src="@/assets/file.svg" width="40" height="40" />
     </button>
   </div>
   <!-- file name -->
   <div v-if="hasFile" class="file-name fixed-bottom">
-    {{ fileName }}
+    {{ fileNameString }}
   </div>
 
   <div class="toast-container position-static position-fixed bottom-0 start-0 m-3">
@@ -122,8 +139,8 @@ export default {
   /* position: absolute; */
   /* bottom: 16px; */
   left: 50%;
-  width: 150px;
-  margin-left: -75px;
+  width: 180px;
+  margin-left: -90px;
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -142,8 +159,8 @@ export default {
 
 .file-name {
   left: 50%;
-  width: 600px;
-  margin-left: -300px;
+  width: 100vw;
+  margin-left: -50vw;
   display: flex;
   align-items: center;
   flex-direction: column;
