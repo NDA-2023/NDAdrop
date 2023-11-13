@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
+    <!-- Include file-type library -->
+    <script type="module">
+        import fileType from 'https://cdn.jsdelivr.net/npm/file-type@18.7.0/+esm'
+    </script>
+    <!-- Include blob-util library -->
+    <script src="https://cdn.jsdelivr.net/npm/blob-util/dist/blob-util.min.js"></script>
+    <title>WebRTC NDADrop</title>
+</head>
+<body>
+  <h1>WebRTC NDADrop</h1>
+  <input type="file" id="fileInput" />
+  <p id="uuidDisplay"></p>
+  <p id="data"></p>
+  <h1>Available Users:</h1>
+  <ul id="onlineUsersList"></ul>
+
+  <script>
+    const peers = new Map(); // Map<SenderID,Peer>
+    let uuid = uuidv4();
+    document.getElementById('uuidDisplay').textContent = "Your UUID: " + uuid;
+    console.log(uuid);
+
+    //source: https://stackoverflow.com/questions/105034/how-do-i-create-a-guid-uuid 
+    function uuidv4() {
+        return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+            (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        );
+    }
+
+    function doesPeerExist(SenderID){
+        return peers.has(SenderID);
+    }
+
+    function getSenderIDOnPeer(peer){
+        // Assuming 'peers' is the Map that associates sender IDs with 'simple-peer' instances
+        for (const [senderID, existingPeer] of peers.entries()) {
+            if (existingPeer === peer) {
+                return senderID;
+            }
+        }
+        // Return null or handle the case when the peer is not found
+        return null;
+    }
+
+    //*** SIGNALLING SERVER ***//
+    const ws = new WebSocket('ws://192.168.1.196:3001');
+    ws.onopen = () => {
+      console.log('Connected to WebSocket server');
+      ws.send(JSON.stringify({type: 'join', uuid: uuid}));
+    };
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'onlineUsers') {
+        updateOnlineUsersList(data.data);
+      }
+      else {
+        let SenderID = data.to;
+        if (doesPeerExist(data.to)) {
+            peers.get(SenderID).signal(data.data)
+        } else {
+            console.log("No peer found for " + SenderID + " adding new peer.")
+            peers.set(SenderID,initializeReceiverPeer());
+            peers.get(SenderID).signal(data.data)
+        }
+        if (peers.get(SenderID).connected) {
+            console.log('Peer already connected');
+        // Your logic when the peer is already connected
+        }
+      }
+    };
+
+    //*** AVAILABLE USERS LIST ***//
+    function updateOnlineUsersList(onlineUsers) {
+      const onlineUsersList = document.getElementById('onlineUsersList');
+      onlineUsersList.innerHTML = '';
+
+      onlineUsers.forEach((user) => {
+            const listItem = document.createElement('li');
+            const sendButton = createSendButton(user); // Create a send button for each user
+            listItem.textContent = user;
+            
+            // Append the send button next to the user
+            listItem.appendChild(sendButton);
+            
+            // Append the list item to the online users list
+            onlineUsersList.appendChild(listItem);
+        });
+    }
+    function createSendButton(user) {
+        const sendButton = document.createElement('button');
+        sendButton.textContent = 'Send';
+        sendButton.addEventListener('click', () => {
+            // Handle the send button click for the specific user
+            console.log(`Sending to ${user}`);
+            startFileTransfer(user)
+            // Add your logic to initiate the file transfer or chat with the selected user
+        });
+        return sendButton;
+    }
+
+    //*** PEER TO PEER COMMUNICATION ***// 
+    function initializeReceiverPeer() {
+        // Initialize the peer if not already done
+        const newPeer = new SimplePeer({ initiator: false });
+        console.log("Receiver mode")
+
+        newPeer.on('signal', (data) => {
+            // console.log('Receiver Peer signal:', data);
+            let SenderID = getSenderIDOnPeer(newPeer);
+            if (SenderID)
+                ws.send(JSON.stringify({ type: 'signal', data: data, from: uuid, to: SenderID}));
+        });
+
+        newPeer.on('connect', () => {
+            console.log('Peer connected: ',getSenderIDOnPeer(newPeer));
+            // Your logic when the peer is connected
+        });
+
+        newPeer.on('data', async (data) => {
+            // const text = new TextDecoder('utf-8').decode(data);
+            // console.log('Received data:', text);
+            // document.getElementById('data').textContent = 'Received data: ' + text;
+            // Your logic for handling incoming data
+            // Assuming the data is an object with fileName and content properties
+
+            // const blob = new Blob([data]);
+            // const downloadLink = document.createElement('a');
+            // downloadLink.href = URL.createObjectURL(blob);
+            // downloadLink.download = 'received_file.txt';
+            // downloadLink.click();
+            const { chunks, type } = data;
+            // Now you have received chunks and file type, you can process the file
+            await processReceivedFile(chunks, type);
+        });
+
+        newPeer.on('close', (data) => {
+            let senderID = getSenderIDOnPeer(newPeer);
+            console.log('Sender peer closed the connection: ',senderID);
+            peers.delete(senderID);
+            // Your logic for handling incoming data
+        });
+        return newPeer;
+    }
+
+    // Function to process the received file
+    async function processReceivedFile(chunks, type) {
+        // You can now reconstruct the file and use the type information as needed
+        // For example, you can create a Blob from the chunks
+        const concatenatedChunks = new Uint8Array(
+            chunks.reduce((acc, chunk) => [...acc, ...new Uint8Array(chunk)], [])
+        ).buffer;
+
+        // Create a Blob with the correct type
+        const blob = new Blob([concatenatedChunks], { type: type.mime });
+
+        // Use the blob as needed, e.g., create a download link
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = 'received_file.' + type.ext;
+        downloadLink.click();
+    }
+
+    function initializeSenderPeer(otherUserUUID) {
+        // Initialize the peer if not already done
+        peer = new SimplePeer({ initiator: true});
+        console.log("Sender mode")
+
+        peer.on('signal', (data) => {
+            // console.log('Sender Peer signal:', data);
+            // Send the signal data to the other peer using a local method
+            // Your implementation here, could involve local network communication
+            ws.send(JSON.stringify({ type: 'signal', data: data, to: otherUserUUID, from: uuid}));
+        });
+
+        peer.on('connect', async () => {
+            let senderID = getSenderIDOnPeer(peer);
+            console.log('Peer connected: ',senderID);
+            let senderPeer = peers.get(senderID);
+            // const encodedData = new TextEncoder().encode("Hello World");
+            // senderPeer.send(encodedData);
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            console.log('Sending file: ',file.name);
+            if (file) {
+                // Read the file content as ArrayBuffer
+                // const reader = new FileReader();
+                // reader.onload = () => {
+                //     const content = reader.result;
+                //     // Send the file name and content to the other peer
+                //     senderPeer.send(content);
+                // };
+                // reader.readAsArrayBuffer(file);
+                const { chunks, type } = await convertFileToChunks(file);
+                senderPeer.send({ chunks, type });
+            } else {
+                console.error('Please select a file.');
+            }
+        });
+
+        peer.on('data', (data) => {
+            // console.log('Received data from peer:', data);
+            // Your logic for handling incoming data
+            const text = new TextDecoder('utf-8').decode(data);
+            console.log('Received data:', text);
+        });
+
+        peer.on('close', (data) => {
+            let senderID = getSenderIDOnPeer(peer);
+            console.log('Receiver peer closed the connection: ',senderID);
+            // Your logic for handling incoming data
+            peers.delete(senderID);
+        });
+        return peer;
+    }
+
+    // Function to convert a file to chunks and handle file types
+    async function convertFileToChunks(file) {
+        const CHUNK_SIZE = 16 * 1024; // 16 KB chunks
+
+        const fileBuffer = await blobUtil.blobToArrayBuffer(file);
+
+        const chunks = [];
+        for (let offset = 0; offset < fileBuffer.byteLength; offset += CHUNK_SIZE) {
+            const chunk = fileBuffer.slice(offset, offset + CHUNK_SIZE);
+            chunks.push(chunk);
+        }
+
+        // Determine the file type
+        const type = await fileType.fromBuffer(chunks[0]);
+
+        return { chunks, type };
+    }
+
+    function startFileTransfer(otherUserId) {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+        if (file) {
+            if (!doesPeerExist(otherUserId)) {
+                console.log("No sender peer found for " + otherUserId + " adding new peer.")
+                peers.set(otherUserId,initializeSenderPeer(otherUserId));
+            }
+        } else {
+            console.error('Please select a file.');
+        }
+    }
+
+  </script>
+
+</body>
+</html>
