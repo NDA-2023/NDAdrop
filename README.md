@@ -1,5 +1,11 @@
 # NDAdrop Backend
 
+## Requirements
+
+* NodeJS
+* Websocket library
+* http library
+
 ## Run the Signaling Server
 
 ```bash
