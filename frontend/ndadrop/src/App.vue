@@ -14,7 +14,7 @@ export default {
   // },
   created() {
     const peers = usePeersStore()
-    peers.addNewPeer("Me: Maties Claesen", false, true);
+    peers.addNewPeer("Maties Claesen", false, true);
     peers.addNewPeer("Yarne Dirkx", true);
     peers.addNewPeer("Lise Verbeeck", false);
     peers.addNewPeer("Danny Grispen", false);

@@ -9,12 +9,21 @@ export default {
             required: true
         }
     },
+    data() {
+        return {
+            myName: "",
+        }
+    },
     methods: {
         ft(timestamp: Date) {
             return formatTime(timestamp);
         },
         selectPeer() {
             this.peer.setSelected(!this.peer.isSelected());
+        },
+        setName() {
+            this.peer.setName(this.myName);
+            console.log(this.peer.getName());
         }
     }
 }
@@ -26,7 +35,9 @@ export default {
         <div v-if="peer.isMe()">
             <div class="list-group-item list-group-item-action lg blue">
                 <div class="ms-2 me-auto">
-                    <div class="fw-bold">{{ peer.getName() }}</div>
+                    <div class="fw-bold">
+                        Me: <input type="text" class="myName" id="exampleFormControlInput1" placeholder="Enter your name" v-model="myName" @blur="setName">
+                    </div>
                 </div>
             </div>
         </div>
@@ -85,5 +96,15 @@ export default {
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+.myName {
+    border: none;
+    background-color: transparent;
+    color: white;
+}
+
+.myName::placeholder {
+    color: white;
 }
 </style>
