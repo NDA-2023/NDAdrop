@@ -12,5 +12,14 @@ node server.js
 node index.js
 ```
 
-!Works only for txt files!
+#####!Works only for txt files!
+
+in index.html change this line:     
+ ```js
+ const ws = new WebSocket('ws://192.168.1.196:3001');
+ ```
+ to
+  ```js
+ const ws = new WebSocket('ws://<your ip or localhost>:3001');
+ ```
 
