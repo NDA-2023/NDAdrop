@@ -23,7 +23,6 @@ export default {
         },
         setName() {
             this.peer.setName(this.myName);
-            console.log(this.peer.getName());
         }
     }
 }
