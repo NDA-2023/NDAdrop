@@ -1,9 +1,10 @@
 <script lang="ts">
 import { SendingFile } from '@/logic/SendingFile'
-import PeerList from './PeerList.vue'
-import FileUploadToast from './FileUploadToast.vue';
+import PeerList from '@/components/PeerList.vue'
+import FileUploadToast from '@/components/FileUploadToast.vue';
 import { Popover } from 'bootstrap';
-import { usePeersStore } from '../stores/PeersStore'
+import { usePeersStore } from '@/stores/PeersStore'
+import { useFileStore } from '@/stores/FileStore';
 import type { Peer } from '@/logic/Peer';
 
 export default {
@@ -59,11 +60,17 @@ export default {
     fileSelected(event: any) {
       this.hasFile = event.target.files.length != 0;
       if (this.hasFile) {
+        // add the fileNames for GUI
         for (let i = 0; i < event.target.files.length; i++) {
           this.fileNames.push(event.target.files[i].name);
         }
+        // show popover
         if (this.popover !== null)
           this.popover.show();
+        // add files to piniastore
+        const files = useFileStore();
+        files.setFiles(event.target.files);
+        console.log("here");
       }
     },
     cancelFile() {
