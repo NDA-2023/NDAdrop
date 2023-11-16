@@ -9,13 +9,10 @@ import { importSimplePeer } from '@/plugins/simplePeerPlugin.js';
 import { useFileStore } from './stores/FileStore';
 import { File } from './logic/File';
 
-//TODO: Change username in server
-//TODO: close peer
-//TODO: UUID package migration
 //TODO: toaster fixen
 
-//TODO: Timestamp die niet meer werkt??
-//TODO: max file size??
+//TODO: Timestamp die niet meer werkt? -> opl. bijhouden op signaling server (op joining client zijn ze enkel fout)
+//TODO: max file size?
 
 export default {
   components: {
@@ -55,7 +52,7 @@ export default {
             peer.websocket.signal(parsedMessage.data);
           });
         }else{
-          console.log("websocket exists")
+          // console.log("websocket exists")
           sendingPeer?.websocket.signal(parsedMessage.data);
         }
       }
@@ -68,7 +65,7 @@ export default {
 
 //*** AVAILABLE USERS LIST ***//
 function updateOnlineUsersList(onlineUsers: any) {
-  console.log("Updating users")
+  // console.log("Updating users")
   const peersStore = usePeersStore();
   const foundUsers = [peersStore.getPeerViaIndex(0).getUID(),];
   onlineUsers.forEach((user:any) => {

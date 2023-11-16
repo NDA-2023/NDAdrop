@@ -7,6 +7,7 @@ import { usePeersStore } from '@/stores/PeersStore'
 import { useFileStore } from '@/stores/FileStore';
 import type { Peer } from '@/logic/Peer';
 import { importSimplePeer } from '@/plugins/simplePeerPlugin';
+import { v1 as uuid } from 'uuid';
 
 export default {
   components: {
@@ -87,10 +88,10 @@ export default {
       const peers = usePeersStore();
       peers.getSelectedPeers().forEach((peer) => {
         this.sendingFiles.forEach((file: any) => {
-          console.log("Creating File Websocket");
+          console.log("Creating Sender Websocket");
           importSimplePeer(true).then((peerInstance) => {
-            let uuid = uuidv4();
-            files.addFile(new File(uuid,file, file.name, peer as Peer, peerInstance));
+            let uid: string = uuid();
+            files.addFile(new File(uid,file, file.name, peer as Peer, peerInstance));
           }).catch((error) => {
             console.error('Error getting SimplePeer: ', error);
           });
@@ -101,12 +102,6 @@ export default {
       this.fileNames = [];
     }
   }
-}
-//source: https://stackoverflow.com/questions/105034/how-do-i-create-a-guid-uuid 
-function uuidv4() {
-  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: any) =>
-      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-  );
 }
 </script>
 <template>

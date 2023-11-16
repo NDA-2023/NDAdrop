@@ -1,4 +1,5 @@
 import { useSocketStore } from '../stores/SocketStore';
+import { v1 as uuid } from 'uuid';
 
 export class Peer {
     private UID: string;
@@ -6,19 +7,10 @@ export class Peer {
     private selected: boolean;
     private me: boolean;
     private joinedTime: Date;
-    private listeningSockets: Array<any> = []; //-> lijst van receiver threads per persoon
-    private sendingSockets: Array<any> = []; //-> lijst van sending threads per persoon
-
-    //source: https://stackoverflow.com/questions/105034/how-do-i-create-a-guid-uuid 
-    private uuidv4() {
-        return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: any) =>
-            (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-        );
-    }
  
     constructor(UUID:string,name: string, selected: boolean = false, me: boolean = false) {
         if (UUID.length == 0)
-          this.UID = this.uuidv4();
+          this.UID = uuid();
         else
           this.UID = UUID;
         this.name = name;

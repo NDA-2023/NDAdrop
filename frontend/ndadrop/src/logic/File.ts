@@ -74,20 +74,35 @@ export class File {
     
           // Event: When the connection is established
           this.websocket.on('connect', () => {
-            console.log('CONNECTED');
+            console.log('Connection established.');
             if (this.websocket.initiator){
+              this.progress = 0;
+              let BUFFER_THRESHOLD = 65535;
               const peer = this.websocket;
               const stream = this.file.stream();
               const reader = stream.getReader();
-              const chunkSize = 1024;
 
               // Start reading and sending chunks
               readAndSendChunk(this.fileName);
 
               function readAndSendChunk(fileName: string) {
-                reader.read({ size: chunkSize }).then(({ done, value }: { done: boolean; value: Uint8Array }) => {
+                reader.read().then(({ done, value }: { done: boolean; value: Uint8Array }) => {
                   handleReading(done, value, fileName);
                 });
+              }
+
+              function calculateTimeout(bufferedAmount: number) {
+                // Adjust the constants based on your preferences
+                const MIN_TIMEOUT = 50; // Minimum timeout in milliseconds
+                const MAX_TIMEOUT = 1000; // Maximum timeout in milliseconds
+              
+                // Calculate a dynamic timeout based on the buffered amount
+                const timeout = Math.max(
+                  MIN_TIMEOUT,
+                  MAX_TIMEOUT - (bufferedAmount / BUFFER_THRESHOLD) * (MAX_TIMEOUT - MIN_TIMEOUT)
+                );
+              
+                return timeout;
               }
 
               function handleReading(done: boolean, value: Uint8Array, fileName: string) {
@@ -97,13 +112,38 @@ export class File {
                   reader.releaseLock(); // Release the reader lock when done
                   return;
                 }
+                // Check bufferedAmount
+                const bufferedAmount = peer._channel.bufferedAmount;
+                // console.log('Buffered amount:', bufferedAmount);
+
+                // If bufferedAmount is greater than or equal to the threshold, wait and retry
+                if (bufferedAmount >= BUFFER_THRESHOLD) {
+                  const timeout = calculateTimeout(bufferedAmount);
+
+                  setTimeout(() => {
+                    handleReading(done, value, fileName);
+                  }, timeout);
+
+                  return;
+                }
 
                 // Send the current chunk
-                peer.send(value);
+                if (value.length > BUFFER_THRESHOLD){
+                  for (let index = 0;index < value.length;index += BUFFER_THRESHOLD) {
+                    let slicedValue = value.slice(index, index + BUFFER_THRESHOLD);
+                    peer.send(slicedValue);
+                    // console.log(slicedValue.length)
+                  }
+                } else {
+                  peer.send(value);
+                }
+                // console.log('Buffered amount:', peer._channel.bufferedAmount);
 
                 // Read and send the next chunk
                 readAndSendChunk(fileName);
               }
+              this.progress = 100;
+
             } else {
               
             }
@@ -113,7 +153,7 @@ export class File {
           this.websocket.on('data', (data: any) => {
             // console.log('DATA', data.toString());
             if (!this.websocket.initiator){
-              // console.log("Data: ", data);
+              // console.log("Data: ", data.length);
               if (data.toString().includes("done")) {
                   // setGotFile(true);
                   const parsed = JSON.parse(data);
@@ -128,7 +168,7 @@ export class File {
                   downloadLink.href = URL.createObjectURL(blob);
                   downloadLink.download = this.fileName;
                   downloadLink.click();
-                  // this.websocket.destroy();
+                  this.websocket.destroy();
                   dataArray = [];
               } else {
                 dataArray.push(new Uint8Array(data));
@@ -138,13 +178,13 @@ export class File {
     
           // Event: When the connection is closed
           this.websocket.on('close', () => {
-            console.log('CONNECTION CLOSED');
+            console.log('Connection closed, file transfer completed.');
             useFileStore().removeFileOnUUID(this.UUID);
           });
     
           // Event: When an error occurs
           this.websocket.on('error', (err:any ) => {
-            console.error('ERROR', err);
+            // console.error('ERROR', err);
             useFileStore().removeFileOnUUID(this.UUID);
             this.websocket.destroy();
           });
