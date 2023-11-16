@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import FileTransfer from '../components/FileTransfer.vue';
 import Chat from '../components/Chat.vue';
-
 </script>
 
 <template>

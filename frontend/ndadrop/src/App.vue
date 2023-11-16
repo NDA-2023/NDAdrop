@@ -3,7 +3,15 @@ import { RouterLink, RouterView } from 'vue-router'
 import TopBar from './components/TopBar.vue'
 import { usePeersStore } from './stores/PeersStore';
 import { useChatStore } from './stores/ChatStore';
+import { useSocketStore } from './stores/SocketStore';
 import type { Peer } from './logic/Peer';
+import { importSimplePeer } from '@/plugins/simplePeerPlugin.js';
+
+//TODO: Change username in server
+
+//TODO: peer zelfde moment sturen??
+//TODO: Timestamp??
+//TODO: close peer??
 
 export default {
   components: {
@@ -13,18 +21,56 @@ export default {
   //   ...mapState(usePeersStore, ['peers'])
   // },
   created() {
-    const peers = usePeersStore()
-    peers.addNewPeer("Maties Claesen", false, true);
-    peers.addNewPeer("Yarne Dirkx", true);
-    peers.addNewPeer("Lise Verbeeck", false);
-    peers.addNewPeer("Danny Grispen", false);
-
-    peers.addNewPeer("John Turmack", false);
-
-    const chat = useChatStore()
-    chat.addMessage(peers.getPeerViaIndex(1) as Peer, "Interlinked");
-  }
+    let randomNames = ['Alice', 'Bob', 'Charlie', 'David', 'Eva', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack'];
+    const peers = usePeersStore();
+    const randomIndex = Math.floor(Math.random() * randomNames.length);
+    peers.addNewPeer('',randomNames[randomIndex], false, true);
+    // const chat = useChatStore();
+    // chat.addMessage(peers.getPeerViaIndex(1) as Peer, "Interlinked");
+  },
+  mounted() {
+    const ws = new WebSocket('ws://127.0.0.1:3001');
+    useSocketStore().setSocket(ws);
+    ws.onopen = () => {
+      console.log('Connected to Signaling server');
+      ws.send(JSON.stringify({type: 'join', uuid: usePeersStore().getPeerViaIndex(0).getUID(), username: usePeersStore().getPeerViaIndex(0).getName()}));
+      // importSimplePeer().then((peerInstance) => {
+      //   usePeersStore().addNewPeer("Test user", false, false, peerInstance);
+      // }).catch((error) => {
+      //   console.error('Error getting SimplePeer:', error);
+      // });
+    };
+    ws.onmessage = (message) => {
+      let parsedMessage = JSON.parse(message.data);
+      if (parsedMessage.type === "onlineUsers"){
+        updateOnlineUsersList(parsedMessage.data);
+      }
+    };
+  },
 }
+
+//*** AVAILABLE USERS LIST ***//
+function updateOnlineUsersList(onlineUsers: any) {
+  const peersStore = usePeersStore();
+  const foundUsers = [peersStore.getPeerViaIndex(0).getUID(),];
+  onlineUsers.forEach((user:any) => {
+    let foundUser = usePeersStore().getPeerViaUID(user[0])
+    foundUsers.push(user[0]);
+    if (!foundUser){
+      importSimplePeer().then((peerInstance) => {
+        peersStore.addNewPeer(user[0],user[1], false, false, peerInstance);
+      }).catch((error) => {
+        console.error('Error getting SimplePeer:', error);
+      });    
+    }
+  });
+  peersStore.peers.forEach(peer => {
+    if (!foundUsers.includes(peer.getUID())) {
+      peersStore.removePeer(peer as Peer);
+    }
+  });
+}
+
 </script>
 
 <template>
