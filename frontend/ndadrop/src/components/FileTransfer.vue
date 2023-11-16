@@ -6,6 +6,8 @@ import { Popover } from 'bootstrap';
 import { usePeersStore } from '@/stores/PeersStore'
 import { useFileStore } from '@/stores/FileStore';
 import type { Peer } from '@/logic/Peer';
+import { importSimplePeer } from '@/plugins/simplePeerPlugin';
+import { File } from '@/logic/File';
 
 export default {
   components: {
@@ -20,12 +22,13 @@ export default {
   data: () => ({
     hasFile: false,
     fileNames: [] as Array<string>,
-    sendingFiles: [] as Array<SendingFile>,
+    sendingFiles: [] as Array<any>,
     popover: null as Popover | null,
+    
   }),
   computed: {
     computedSendingFiles() {
-      let sendFiles: Array<SendingFile> = this.sendingFiles as Array<SendingFile>;
+      let sendFiles: Array<any> = this.sendingFiles as Array<any>;
       return sendFiles;
     },
     /**
@@ -58,19 +61,18 @@ export default {
         fileUpload.click();
     },
     fileSelected(event: any) {
+      const files = useFileStore();
       this.hasFile = event.target.files.length != 0;
       if (this.hasFile) {
         // add the fileNames for GUI
         for (let i = 0; i < event.target.files.length; i++) {
           this.fileNames.push(event.target.files[i].name);
+          this.sendingFiles.push(event.target.files[i]);
+          // files.addFile(new File(event.target.files[i].name, event.target.files[i], uuidv4()))
         }
         // show popover
         if (this.popover !== null)
           this.popover.show();
-        // add files to piniastore
-        const files = useFileStore();
-        files.setFiles(event.target.files);
-        console.log("here");
       }
     },
     cancelFile() {
@@ -83,10 +85,15 @@ export default {
         this.popover.hide();
     },
     sendFile() {
+      const files = useFileStore();
       const peers = usePeersStore();
       peers.getSelectedPeers().forEach((peer) => {
-        this.fileNames.forEach((fileName: string) => {
-          this.sendingFiles.push(new SendingFile(fileName, peer as Peer));
+        this.sendingFiles.forEach((file: any) => {
+          importSimplePeer().then((peerInstance) => {
+            files.addFile(new SendingFile(file, peer as Peer, peerInstance));
+          }).catch((error) => {
+            console.error('Error getting SimplePeer: ', error);
+          });
         })
       });
       this.cancelFile();
@@ -94,8 +101,13 @@ export default {
     }
   }
 }
+//source: https://stackoverflow.com/questions/105034/how-do-i-create-a-guid-uuid 
+function uuidv4() {
+    return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: any) =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+}
 </script>
-
 <template>
   <!-- Peerlist -->
   <div class="file-transfer container">

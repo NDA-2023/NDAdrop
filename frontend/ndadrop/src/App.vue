@@ -3,7 +3,15 @@ import { RouterLink, RouterView } from 'vue-router'
 import TopBar from './components/TopBar.vue'
 import { usePeersStore } from './stores/PeersStore';
 import { useChatStore } from './stores/ChatStore';
+import { useSocketStore } from './stores/SocketStore';
 import type { Peer } from './logic/Peer';
+import { importSimplePeer } from '@/plugins/simplePeerPlugin.js';
+
+//TODO: Change username in server
+
+//TODO: peer zelfde moment sturen??
+//TODO: Timestamp??
+//TODO: close peer??
 
 export default {
   components: {
@@ -13,18 +21,96 @@ export default {
   //   ...mapState(usePeersStore, ['peers'])
   // },
   created() {
-    const peers = usePeersStore()
-    peers.addNewPeer("Maties Claesen", false, true);
-    peers.addNewPeer("Yarne Dirkx", true);
-    peers.addNewPeer("Lise Verbeeck", false);
-    peers.addNewPeer("Danny Grispen", false);
-
-    peers.addNewPeer("John Turmack", false);
-
-    const chat = useChatStore()
-    chat.addMessage(peers.getPeerViaIndex(1) as Peer, "Interlinked");
-  }
+    let randomNames = ['Alice', 'Bob', 'Charlie', 'David', 'Eva', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack'];
+    const peers = usePeersStore();
+    const randomIndex = Math.floor(Math.random() * randomNames.length);
+    peers.addNewPeer('',randomNames[randomIndex], false, true);
+    console.log("My UUID: ", peers.getMyself().getUID());
+    // const chat = useChatStore();
+    // chat.addMessage(peers.getPeerViaIndex(1) as Peer, "Interlinked");
+  },
+  mounted() {
+    const ws = new WebSocket('ws://192.168.1.196:3001');
+    useSocketStore().setSocket(ws);
+    ws.onopen = () => {
+      console.log('Connected to Signaling server');
+      ws.send(JSON.stringify({type: 'join', uuid: usePeersStore().getMyself().getUID(), username: usePeersStore().getMyself().getName()}));
+    };
+    ws.onmessage = (message) => {
+      let parsedMessage = JSON.parse(message.data);
+      console.log(parsedMessage);
+      if (parsedMessage.type === "onlineUsers"){
+        updateOnlineUsersList(parsedMessage.data);
+      } else {
+        if (!parsedMessage.fileID)
+          handleIncomingFile(parsedMessage.to, parsedMessage.data);
+        else{
+          
+        }
+      }
+    };
+    ws.onerror = (message) => {
+      console.log("Error: cannot connect to signaling server");
+    };
+  },
 }
+
+//*** AVAILABLE USERS LIST ***//
+function updateOnlineUsersList(onlineUsers: any) {
+  const peersStore = usePeersStore();
+  const foundUsers = [peersStore.getPeerViaIndex(0).getUID(),];
+  onlineUsers.forEach((user:any) => {
+    let foundUser = usePeersStore().getPeerViaUID(user[0])
+    foundUsers.push(user[0]);
+    if (!foundUser){
+      peersStore.addNewPeer(user[0],user[1], false, false); 
+    }
+  });
+  peersStore.peers.forEach(peer => {
+    if (!foundUsers.includes(peer.getUID())) {
+      peersStore.removePeer(peer as Peer);
+    }
+  });
+}
+
+function handleIncomingFile(to: string, data: any){
+  importSimplePeer().then((peerInstance) => {          
+    console.log("Receiver mode")
+    
+    peerInstance.on('signal', (data: any) => {
+        let senderPeer = usePeersStore().getPeerViaUID(to);
+        console.log('Receiver Peer signal:', senderPeer?.getUID());
+        let wsSocket = useSocketStore().socket;
+        // let SenderID = getSenderIDOnPeer(newPeer);
+        if (senderPeer && wsSocket)
+          wsSocket.send(JSON.stringify({ type: 'signal', data: data, from: usePeersStore().getMyself(), to: senderPeer.getUID()}));
+    });
+
+    peerInstance.on('connect', () => {
+        console.log('Peer connected');
+        // Your logic when the peer is connected
+    });
+
+    peerInstance.on('data', (data: any) => {
+        const blob = new Blob([data]);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = 'received_file.txt';
+        downloadLink.click();
+    });
+
+    peerInstance.on('close', (data: any) => {
+        // let senderID = getSenderIDOnPeer(newPeer);
+        // console.log('Sender peer closed the connection: ',senderID);
+        // peers.delete(senderID);
+        // Your logic for handling incoming data
+    });
+
+  }).catch((error) => {
+        console.error('Error getting SimplePeer: ', error);
+  });
+}
+
 </script>
 
 <template>

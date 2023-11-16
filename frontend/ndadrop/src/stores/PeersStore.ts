@@ -12,14 +12,23 @@ export const usePeersStore = defineStore('peers', {
     },
     getPeerViaName: (state) => {
       return (peerName: string) => state.peers.find((user) => user.getName() === peerName)
+    },
+    getPeerViaUID: (state) => {
+      return (peerUID: string) => state.peers.find((user) => user.getUID() === peerUID)
+    },
+    getMyself: (state) => {
+      return () => state.peers[0]
     }
   },
   actions: {
     addPeer(peer: Peer) {
       this.peers.push(peer);
     },
-    addNewPeer(peerName: string, selected: boolean = false, me: boolean = false) {
-      this.peers.push(new Peer(peerName, selected, me));
+    addNewPeer(peerUUID:string, peerName: string, selected: boolean = false, me: boolean = false) {
+      if (peerUUID.length == 0)
+        this.peers.push(new Peer('',peerName, selected, me));
+      else
+        this.peers.push(new Peer(peerUUID,peerName, selected, me));
     },
     removePeer(peer: Peer) {
       const index: number = this.peers.indexOf(peer, 0);
