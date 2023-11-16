@@ -6,12 +6,16 @@ import { useChatStore } from './stores/ChatStore';
 import { useSocketStore } from './stores/SocketStore';
 import type { Peer } from './logic/Peer';
 import { importSimplePeer } from '@/plugins/simplePeerPlugin.js';
+import { useFileStore } from './stores/FileStore';
+import { File } from './logic/File';
 
 //TODO: Change username in server
+//TODO: close peer
+//TODO: UUID package migration
+//TODO: toaster fixen
 
-//TODO: peer zelfde moment sturen??
-//TODO: Timestamp??
-//TODO: close peer??
+//TODO: Timestamp die niet meer werkt??
+//TODO: max file size??
 
 export default {
   components: {
@@ -30,7 +34,7 @@ export default {
     // chat.addMessage(peers.getPeerViaIndex(1) as Peer, "Interlinked");
   },
   mounted() {
-    const ws = new WebSocket('ws://192.168.1.196:3001');
+    const ws = new WebSocket('wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws');
     useSocketStore().setSocket(ws);
     ws.onopen = () => {
       console.log('Connected to Signaling server');
@@ -38,14 +42,21 @@ export default {
     };
     ws.onmessage = (message) => {
       let parsedMessage = JSON.parse(message.data);
-      console.log(parsedMessage);
+      // console.log(parsedMessage);
       if (parsedMessage.type === "onlineUsers"){
         updateOnlineUsersList(parsedMessage.data);
       } else {
-        if (!parsedMessage.fileID)
-          handleIncomingFile(parsedMessage.to, parsedMessage.data);
-        else{
-          
+        let sendingPeer = useFileStore().getFileOnUUID(parsedMessage.fileID);
+        if (!sendingPeer){
+          console.log("Creating receiving websocket")
+          importSimplePeer(false).then((peerInstance) => {
+            let peer = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '',usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
+            useFileStore().addFile(peer);
+            peer.websocket.signal(parsedMessage.data);
+          });
+        }else{
+          console.log("websocket exists")
+          sendingPeer?.websocket.signal(parsedMessage.data);
         }
       }
     };
@@ -57,57 +68,24 @@ export default {
 
 //*** AVAILABLE USERS LIST ***//
 function updateOnlineUsersList(onlineUsers: any) {
+  console.log("Updating users")
   const peersStore = usePeersStore();
   const foundUsers = [peersStore.getPeerViaIndex(0).getUID(),];
   onlineUsers.forEach((user:any) => {
-    let foundUser = usePeersStore().getPeerViaUID(user[0])
+    let foundUser: Peer = usePeersStore().getPeerViaUID(user[0]) as Peer
     foundUsers.push(user[0]);
     if (!foundUser){
       peersStore.addNewPeer(user[0],user[1], false, false); 
+    } else {
+      if(user[1] != foundUser.getName()){ // Change username
+        foundUser.setName(user[1]);
+      }
     }
   });
   peersStore.peers.forEach(peer => {
     if (!foundUsers.includes(peer.getUID())) {
       peersStore.removePeer(peer as Peer);
     }
-  });
-}
-
-function handleIncomingFile(to: string, data: any){
-  importSimplePeer().then((peerInstance) => {          
-    console.log("Receiver mode")
-    
-    peerInstance.on('signal', (data: any) => {
-        let senderPeer = usePeersStore().getPeerViaUID(to);
-        console.log('Receiver Peer signal:', senderPeer?.getUID());
-        let wsSocket = useSocketStore().socket;
-        // let SenderID = getSenderIDOnPeer(newPeer);
-        if (senderPeer && wsSocket)
-          wsSocket.send(JSON.stringify({ type: 'signal', data: data, from: usePeersStore().getMyself(), to: senderPeer.getUID()}));
-    });
-
-    peerInstance.on('connect', () => {
-        console.log('Peer connected');
-        // Your logic when the peer is connected
-    });
-
-    peerInstance.on('data', (data: any) => {
-        const blob = new Blob([data]);
-        const downloadLink = document.createElement('a');
-        downloadLink.href = URL.createObjectURL(blob);
-        downloadLink.download = 'received_file.txt';
-        downloadLink.click();
-    });
-
-    peerInstance.on('close', (data: any) => {
-        // let senderID = getSenderIDOnPeer(newPeer);
-        // console.log('Sender peer closed the connection: ',senderID);
-        // peers.delete(senderID);
-        // Your logic for handling incoming data
-    });
-
-  }).catch((error) => {
-        console.error('Error getting SimplePeer: ', error);
   });
 }
 

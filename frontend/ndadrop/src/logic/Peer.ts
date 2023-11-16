@@ -10,7 +10,7 @@ export class Peer {
     private sendingSockets: Array<any> = []; //-> lijst van sending threads per persoon
 
     //source: https://stackoverflow.com/questions/105034/how-do-i-create-a-guid-uuid 
-    public uuidv4() {
+    private uuidv4() {
         return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: any) =>
             (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
         );
@@ -28,46 +28,6 @@ export class Peer {
             this.selected = selected;
         this.joinedTime = new Date();
     }
-
-    public addNewListeningSocket(websocket: any){
-      this.listeningSockets.push(websocket);
-      // Set up event listeners
-      this.setupEventListeners();
-    }
-
-    private setupEventListeners() {
-        let websocket = this.listeningSockets[this.listeningSockets.length - 1]
-        if (websocket) {
-          // Event: When the peer is signaling to the other peer
-          websocket.on('signal', (data: any) => {
-            console.log('SIGNAL', JSON.stringify(data));
-            const socket = useSocketStore().socket;
-            if(socket)
-              socket.send(JSON.stringify({ type: 'signal', data: data, to: "Test1", from: this.UID}));
-          });
-    
-          // Event: When the connection is established
-          websocket.on('connect', () => {
-            console.log('CONNECTED');
-            // Now you can start sending and receiving data
-          });
-    
-          // Event: When data is received from the other peer
-          websocket.on('data', (data: any) => {
-            console.log('DATA', data.toString());
-          });
-    
-          // Event: When the connection is closed
-          websocket.on('close', () => {
-            console.log('CONNECTION CLOSED');
-          });
-    
-          // Event: When an error occurs
-          websocket.on('error', (err:any ) => {
-            console.error('ERROR', err);
-          });
-        }
-      }
 
     public getUID(): string {
         return this.UID

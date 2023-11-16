@@ -1,4 +1,5 @@
 <script lang="ts">
+import { useSocketStore } from '@/stores/SocketStore';
 import { Peer } from '../logic/Peer';
 import { formatTime } from '@/logic/Logic';
 
@@ -23,6 +24,10 @@ export default {
         },
         setName() {
             this.peer.setName(this.myName);
+            const socket = useSocketStore().socket;
+            console.log("changin ")
+            if(socket)
+                socket.send(JSON.stringify({ type: 'change-username', uuid: this.peer.getUID(), newName: this.peer.getName()}));
         }
     }
 }

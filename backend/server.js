@@ -85,6 +85,7 @@ function handleSignal(sender, signalMessage) {
     const targetUserUUID = signalMessage.to;
     const senderUserUUID = signalMessage.from;
     const fileUUID = signalMessage.fileID;
+    const fileName = signalMessage.fileName;
     // Find the target user's WebSocket connection in the Map
     const targetUserWs = clients.get(targetUserUUID);
 
@@ -93,7 +94,7 @@ function handleSignal(sender, signalMessage) {
             // Forward the signal data to the target user
             console.log("Handling send signal to " + usernames.get(targetUserUUID));
             // console.log(signalMessage);
-            targetUserWs.send(JSON.stringify({ type: 'signal', data: signalMessage.data, to: senderUserUUID, fileID: fileUUID}));
+            targetUserWs.send(JSON.stringify({ type: 'signal', data: signalMessage.data, to: senderUserUUID, fileID: fileUUID, fileName: fileName}));
         }
     } else {
       console.error(`Target user ${targetUserUUID} not found`);

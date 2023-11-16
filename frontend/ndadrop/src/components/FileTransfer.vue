@@ -1,5 +1,5 @@
 <script lang="ts">
-import { SendingFile } from '@/logic/SendingFile'
+import { File } from '@/logic/File.js'
 import PeerList from '@/components/PeerList.vue'
 import FileUploadToast from '@/components/FileUploadToast.vue';
 import { Popover } from 'bootstrap';
@@ -7,7 +7,6 @@ import { usePeersStore } from '@/stores/PeersStore'
 import { useFileStore } from '@/stores/FileStore';
 import type { Peer } from '@/logic/Peer';
 import { importSimplePeer } from '@/plugins/simplePeerPlugin';
-import { File } from '@/logic/File';
 
 export default {
   components: {
@@ -28,7 +27,7 @@ export default {
   }),
   computed: {
     computedSendingFiles() {
-      let sendFiles: Array<any> = this.sendingFiles as Array<any>;
+      let sendFiles: Array<File> = useFileStore().files as Array<File>;
       return sendFiles;
     },
     /**
@@ -61,7 +60,6 @@ export default {
         fileUpload.click();
     },
     fileSelected(event: any) {
-      const files = useFileStore();
       this.hasFile = event.target.files.length != 0;
       if (this.hasFile) {
         // add the fileNames for GUI
@@ -89,13 +87,16 @@ export default {
       const peers = usePeersStore();
       peers.getSelectedPeers().forEach((peer) => {
         this.sendingFiles.forEach((file: any) => {
-          importSimplePeer().then((peerInstance) => {
-            files.addFile(new SendingFile(file, peer as Peer, peerInstance));
+          console.log("Creating File Websocket");
+          importSimplePeer(true).then((peerInstance) => {
+            let uuid = uuidv4();
+            files.addFile(new File(uuid,file, file.name, peer as Peer, peerInstance));
           }).catch((error) => {
             console.error('Error getting SimplePeer: ', error);
           });
         })
       });
+      this.sendingFiles = [];
       this.cancelFile();
       this.fileNames = [];
     }
@@ -103,9 +104,9 @@ export default {
 }
 //source: https://stackoverflow.com/questions/105034/how-do-i-create-a-guid-uuid 
 function uuidv4() {
-    return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: any) =>
-        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-    );
+  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: any) =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
 }
 </script>
 <template>
@@ -139,7 +140,7 @@ function uuidv4() {
 
   <div class="toast-container position-static position-fixed bottom-0 start-0 m-3">
     <div v-for="sendingFile in computedSendingFiles">
-      <FileUploadToast :sending-file="sendingFile" />
+      <FileUploadToast v-if="sendingFile.websocket.initiator" :sending-file="sendingFile" />
     </div>
   </div>
 </template>

@@ -1,11 +1,11 @@
 <script lang="ts">
-import { SendingFile } from '@/logic/SendingFile';
+import { File } from '@/logic/File';
 import { Toast } from 'bootstrap';
 
 export default {
     props: {
         sendingFile: {
-            type: SendingFile,
+            type: File,
             required: true
         }
     },
