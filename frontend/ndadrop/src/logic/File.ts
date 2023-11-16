@@ -78,16 +78,25 @@ export class File {
             if (this.websocket.initiator){
               this.progress = 0;
               let BUFFER_THRESHOLD = 65535;
+              let sendLength = 0;
               const peer = this.websocket;
               const stream = this.file.stream();
               const reader = stream.getReader();
 
+              // Calculate the total size of the file
+              const totalFileSize = this.file.size;
+              console.log(totalFileSize)
               // Start reading and sending chunks
-              readAndSendChunk(this.fileName);
+              readAndSendChunk(this.fileName, this.progress);
 
-              function readAndSendChunk(fileName: string) {
+              function calculateProgress(sentBytes: number) {
+                // Calculate progress as a percentage
+                return (sentBytes / totalFileSize) * 100;
+              }
+
+              function readAndSendChunk(fileName: string, progress: any) {
                 reader.read().then(({ done, value }: { done: boolean; value: Uint8Array }) => {
-                  handleReading(done, value, fileName);
+                  handleReading(done, value, fileName, progress);
                 });
               }
 
@@ -105,7 +114,7 @@ export class File {
                 return timeout;
               }
 
-              function handleReading(done: boolean, value: Uint8Array, fileName: string) {
+              function handleReading(done: boolean, value: Uint8Array, fileName: string, progress: any) {
                 if (done) {
                   // Notify the receiver that the file transfer is complete
                   peer.send(JSON.stringify({ done: true, fileName }));
@@ -115,13 +124,18 @@ export class File {
                 // Check bufferedAmount
                 const bufferedAmount = peer._channel.bufferedAmount;
                 // console.log('Buffered amount:', bufferedAmount);
-
+                sendLength = sendLength + (value.length/2);
+                // Update progress based on the amount of data sent                  
+                progress = calculateProgress(sendLength);
+                console.log(progress);
+                console.log(sendLength)
+                
                 // If bufferedAmount is greater than or equal to the threshold, wait and retry
                 if (bufferedAmount >= BUFFER_THRESHOLD) {
                   const timeout = calculateTimeout(bufferedAmount);
 
                   setTimeout(() => {
-                    handleReading(done, value, fileName);
+                    handleReading(done, value, fileName, progress);
                   }, timeout);
 
                   return;
@@ -140,7 +154,7 @@ export class File {
                 // console.log('Buffered amount:', peer._channel.bufferedAmount);
 
                 // Read and send the next chunk
-                readAndSendChunk(fileName);
+                readAndSendChunk(fileName, progress);
               }
               this.progress = 100;
 
@@ -153,6 +167,7 @@ export class File {
           this.websocket.on('data', (data: any) => {
             // console.log('DATA', data.toString());
             if (!this.websocket.initiator){
+              this.progress = 0;
               // console.log("Data: ", data.length);
               if (data.toString().includes("done")) {
                   // setGotFile(true);
@@ -174,11 +189,13 @@ export class File {
                 dataArray.push(new Uint8Array(data));
               }
             }
+
           });
     
           // Event: When the connection is closed
           this.websocket.on('close', () => {
             console.log('Connection closed, file transfer completed.');
+            this.progress = 100;
             useFileStore().removeFileOnUUID(this.UUID);
           });
     

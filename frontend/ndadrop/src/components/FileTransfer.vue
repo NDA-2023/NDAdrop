@@ -97,7 +97,7 @@ export default {
           });
         })
       });
-      this.sendingFiles = [];
+      // this.sendingFiles = [];
       this.cancelFile();
       this.fileNames = [];
     }
@@ -135,7 +135,7 @@ export default {
 
   <div class="toast-container position-static position-fixed bottom-0 start-0 m-3">
     <div v-for="sendingFile in computedSendingFiles">
-      <FileUploadToast v-if="sendingFile.websocket.initiator" :sending-file="sendingFile" />
+      <FileUploadToast :is-initiator="sendingFile.websocket.initiator" :sending-file="sendingFile" />
     </div>
   </div>
 </template>

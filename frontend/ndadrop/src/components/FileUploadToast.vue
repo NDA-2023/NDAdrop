@@ -7,6 +7,10 @@ export default {
         sendingFile: {
             type: File,
             required: true
+        },
+        isInitiator: {
+            type: Boolean,
+            required: false
         }
     },
     created() {
@@ -29,13 +33,17 @@ export default {
             }, 1000)
 
             //refresh progress bar
-            setInterval(() => {
+            var id = setInterval(() => {
 
-                if (this.sendingFile.getProgress() >= 100)
+                if (this.sendingFile.getProgress() >= 100 || !this.sendingFile){
                     this.isComplete = true;
-                else
-                    //TODO: added random progress! -> used for demonstration purposes
-                    this.sendingFile.setProgress(this.sendingFile.getProgress() + (Math.random() * 10))
+                    clearInterval(id);
+                }
+                    
+                console.log(this.isComplete)
+                // else
+                //     //TODO: added random progress! -> used for demonstration purposes
+                //     this.sendingFile.setProgress(this.sendingFile.getProgress() + (Math.random() * 10))
 
             }, 100)
         }
@@ -47,7 +55,9 @@ export default {
     <div ref="uploadToast" class="toast m-1" style="z-index: 11" role="alert" aria-live="assertive" aria-atomic="true"
         data-bs-autohide="false">
         <div class="toast-header green">
-            <strong class="me-auto">Sending {{ sendingFile.getFileName() }} to {{ sendingFile.getPeer().getName()
+            <strong v-if="isInitiator" class="me-auto">Sending {{ sendingFile.getFileName() }} to {{ sendingFile.getPeer().getName()
+            }}</strong>
+            <strong v-else class="me-auto">Receiving {{ sendingFile.getFileName() }} from {{ sendingFile.getPeer().getName()
             }}</strong>
             <small>{{ minutesAgo }}</small>
             <button v-if="isComplete" type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
@@ -55,7 +65,7 @@ export default {
         <div class="toast-body">
             <div class="progress" role="progressbar" aria-label="Basic example" :aria-valuenow="sendingFile.getProgress()"
                 aria-valuemin="0" aria-valuemax="100">
-                <div :class="'progress-bar' + (isComplete ? ' green' : ' blue')"
+                <div :class="'progress-bar' + (isComplete ? 'green' : ' blue')"
                     :style="'width: ' + sendingFile.getProgress() + '%'"></div>
                 <div v-if="isComplete" class="done">Done</div>
             </div>
