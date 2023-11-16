@@ -42,7 +42,7 @@ export class ReceivingFile {
             // Event: When the peer is signaling to the other peer
             this.websocket.on('signal', (data: any) => {
                 console.log('SIGNAL', JSON.stringify(data));
-                const socket = useSocketStore().socket;
+                const socket: any = useSocketStore().socket;
                 if(socket)
                 socket.send(JSON.stringify({ type: 'signal', data: data, to: this.fromPeer.getUID(), from: me.getUID()}));
             });

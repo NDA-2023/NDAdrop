@@ -41,7 +41,7 @@ export class Peer {
           // Event: When the peer is signaling to the other peer
           websocket.on('signal', (data: any) => {
             console.log('SIGNAL', JSON.stringify(data));
-            const socket = useSocketStore().socket;
+            const socket: any = useSocketStore().socket;
             if(socket)
               socket.send(JSON.stringify({ type: 'signal', data: data, to: "Test1", from: this.UID}));
           });
