@@ -43,7 +43,7 @@
     }
 
     //*** SIGNALLING SERVER ***//
-    const ws = new WebSocket('ws://192.168.1.196:3001');
+    const ws = new WebSocket('wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws');
     ws.onopen = () => {
       console.log('Connected to WebSocket server');
       ws.send(JSON.stringify({type: 'join', uuid: uuid}));
