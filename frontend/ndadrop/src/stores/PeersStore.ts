@@ -17,7 +17,7 @@ export const usePeersStore = defineStore('peers', {
       return (peerUID: string) => state.peers.find((user) => user.getUID() === peerUID)
     },
     getMyself: (state) => {
-      return () => state.peers[0]
+      return state.peers[0];
     }
   },
   actions: {

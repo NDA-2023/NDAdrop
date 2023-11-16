@@ -3,6 +3,7 @@ import MessageVue from './Message.vue';
 import { mapState } from 'pinia'
 import { usePeersStore } from '@/stores/PeersStore'
 import { useChatStore } from '@/stores/ChatStore';
+import { useSocketStore } from '@/stores/SocketStore';
 import type { Peer } from '@/logic/Peer';
 import type { Message } from '@/logic/Message';
 
@@ -34,7 +35,20 @@ export default {
     sendMessage() {
       const peers = usePeersStore();
       const chat = useChatStore();
-      chat.addMessage(peers.getPeerViaIndex(0) as Peer, this.typedMessage);
+      const message = chat.addMessage(peers.getMyself as Peer, this.typedMessage);
+
+      const socket: any = useSocketStore().socket;
+      socket.send(
+        JSON.stringify({
+          type: 'chat-message', 
+          uuid: peers.getMyself.getUID(), 
+          username: peers.getMyself.getName(), 
+          timestamp: message.getTimestamp(), 
+          content: this.typedMessage
+        })
+      );
+
+      // reset message
       this.typedMessage = "";
     }
   }

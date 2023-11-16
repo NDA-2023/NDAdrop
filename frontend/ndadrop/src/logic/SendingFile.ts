@@ -58,7 +58,7 @@ export class SendingFile {
 
     private setupEventListeners() {
         if (this.toWebsocket) {
-            const me = usePeersStore().getMyself();
+            const me = usePeersStore().getMyself;
             // Event: When the peer is signaling to the other peer
             this.toWebsocket.on('signal', (data: any) => {
                 console.log('SIGNAL', JSON.stringify(data));

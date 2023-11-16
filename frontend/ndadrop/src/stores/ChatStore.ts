@@ -7,8 +7,10 @@ export const useChatStore = defineStore('messages', {
     messages: [] as Array<Message>
   }),
   actions: {
-    addMessage(peer: Peer, contents: string) {
-        this.messages.push( new Message(peer, contents) )
+    addMessage(peer: Peer, content: string): Message {
+      const message: Message = new Message(peer, content);
+      this.messages.push( message );
+      return message;
     }
   }
 })
