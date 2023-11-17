@@ -4,8 +4,10 @@ import TopBar from './components/TopBar.vue'
 import { usePeersStore } from './stores/PeersStore';
 import { useChatStore } from './stores/ChatStore';
 import { useSocketStore } from './stores/SocketStore';
-import type { Peer } from './logic/Peer';
+import { Peer } from './logic/Peer';
 import { importSimplePeer } from '@/plugins/simplePeerPlugin.js';
+import { Message } from './logic/Message';
+import { DateTime } from "luxon";
 
 //TODO: Change username in server
 
@@ -30,34 +32,61 @@ export default {
     // chat.addMessage(peers.getPeerViaIndex(1) as Peer, "Interlinked");
   },
   mounted() {
-    const ws = new WebSocket('ws://127.0.0.1:3001');
-    useSocketStore().setSocket(ws);
-    ws.onopen = () => {
-      console.log('Connected to Signaling server');
-      ws.send(JSON.stringify({ type: 'join', uuid: usePeersStore().getMyself.getUID(), username: usePeersStore().getMyself.getName() }));
-    };
-    ws.onmessage = (message) => {
-      let parsedMessage = JSON.parse(message.data);
-      switch (parsedMessage.type) {
-        case "onlineUsers":
-          updateOnlineUsersList(parsedMessage.data);
-          break;
-        case "chat-message":
-          receivedChatMessage(parsedMessage);
-          break;
-        default:
-          if (!parsedMessage.fileID)
-            handleIncomingFile(parsedMessage.to, parsedMessage.data);
-          else {
-
-          }
-          break;
-      }
-    };
-    ws.onerror = (message) => {
-      console.log("Error: cannot connect to signaling server");
-    };
+    this.setupWebsocketServer();
+    this.setupPersistentServer();
   },
+  methods: {
+    setupWebsocketServer() {
+      const ws = new WebSocket('ws://127.0.0.1:3001');
+      useSocketStore().setSocket(ws);
+      ws.onopen = () => {
+        console.log('Connected to Signaling server');
+        ws.send(JSON.stringify({ type: 'join', uuid: usePeersStore().getMyself.getUID(), username: usePeersStore().getMyself.getName() }));
+      };
+      ws.onmessage = (message) => {
+        let parsedMessage = JSON.parse(message.data);
+        switch (parsedMessage.type) {
+          case "onlineUsers":
+            updateOnlineUsersList(parsedMessage.data);
+            break;
+          case "chat-message":
+            receivedChatMessage(parsedMessage);
+            break;
+          default:
+            if (!parsedMessage.fileID)
+              handleIncomingFile(parsedMessage.to, parsedMessage.data);
+            else {
+
+            }
+            break;
+        }
+      };
+      ws.onerror = (message) => {
+        console.log("Error: cannot connect to signaling server");
+      };
+    },
+    setupPersistentServer() {
+      const persistent = new WebSocket('wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws-persistent');
+      useSocketStore().setPersistent(persistent);
+      persistent.onopen = () => {
+        console.log('Connected to Persistent server');
+        persistent.send(JSON.stringify({ type: 'get-messages' }));
+      };
+      persistent.onmessage = (message: any) => {
+        let parsedMessage = JSON.parse(message.data);
+        switch (parsedMessage.type) {
+          case "get-messages":
+            receivedSessionMessages(parsedMessage);
+            break;
+          default:
+            break;
+        }
+      };
+      persistent.onerror = (message) => {
+        console.log("Error: cannot connect to persistent server");
+      };
+    }
+  }
 }
 
 //*** AVAILABLE USERS LIST ***//
@@ -120,6 +149,26 @@ function receivedChatMessage(message: any) {
   const peers = usePeersStore();
   const chat = useChatStore();
   chat.addMessage(peers.getPeerViaUID(message.uuid) as Peer, message.content);
+}
+
+function receivedSessionMessages(sessions: any) {
+  const chat = useChatStore();
+  const data = sessions.result.rows;
+  let currentSession = data[0].session;
+  let arraySessions: Array<Array<Message>> = new Array<Array<Message>>([]);
+  let currentSessionIndex = 0;
+  for (let i = 0; i < data.length; i++) {
+    const senttime = DateTime.fromISO(data[i].senttime);
+    if (currentSession == data[i].session) {
+      arraySessions[currentSessionIndex].push(new Message(new Peer('no uuid',data[i].peername), data[i].content, senttime));
+    } else {
+      currentSession = data[i].session;
+      arraySessions.push([]);
+      arraySessions[++currentSessionIndex].push(new Message(new Peer('no uuid',data[i].peername), data[i].content, senttime));
+    }
+  }
+
+  chat.sessions = arraySessions;
 }
 
 </script>

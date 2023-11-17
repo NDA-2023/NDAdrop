@@ -4,7 +4,8 @@ import type { Peer } from '@/logic/Peer'
 
 export const useChatStore = defineStore('messages', {
   state: () => ({
-    messages: [] as Array<Message>
+    messages: [] as Array<Message>,
+    sessions: [] as Array<Array<Message>>,
   }),
   actions: {
     addMessage(peer: Peer, content: string): Message {
