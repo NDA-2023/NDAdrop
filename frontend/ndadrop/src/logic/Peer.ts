@@ -1,14 +1,14 @@
-import { useSocketStore } from '../stores/SocketStore';
 import { v1 as uuid } from 'uuid';
+import { DateTime } from 'luxon';
 
 export class Peer {
     private UID: string;
     private name: string;
     private selected: boolean;
     private me: boolean;
-    private joinedTime: Date;
+    private joinedTime: DateTime;
  
-    constructor(UUID:string,name: string, selected: boolean = false, me: boolean = false) {
+    constructor(UUID:string, name: string, selected: boolean = false, me: boolean = false) {
         if (UUID.length == 0)
           this.UID = uuid();
         else
@@ -18,7 +18,7 @@ export class Peer {
         this.selected = false;
         if (!this.me)
             this.selected = selected;
-        this.joinedTime = new Date();
+        this.joinedTime = DateTime.now();
     }
 
     public getUID(): string {
@@ -46,7 +46,7 @@ export class Peer {
         return this.me;
     }
 
-    public getJoinedTime(): Date {
+    public getJoinedTime(): DateTime {
         return this.joinedTime;
     }
 }
