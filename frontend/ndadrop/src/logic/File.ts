@@ -57,7 +57,7 @@ export class File {
         const minutes = duration.getMinutes();
         if (minutes <= 0) 
             return duration.getSeconds() + " seconds ago";
-        return minutes + " minutes ago";
+        return minutes + " minutes ago";``
     }
 
     private setupEventListeners() {
@@ -201,7 +201,7 @@ export class File {
     
           // Event: When an error occurs
           this.websocket.on('error', (err:any ) => {
-            // console.error('ERROR', err);
+            console.error('ERROR', err);
             useFileStore().removeFileOnUUID(this.UUID);
             this.websocket.destroy();
           });

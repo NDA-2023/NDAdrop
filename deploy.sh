@@ -33,7 +33,7 @@ else
 fi
 
 echo "========== putting backend in backend repo =========="
-cp -f backend/server.js ../NDAdrop-websocket-server/server.js
+#cp -f backend/server.js ../NDAdrop-websocket-server/server.js
 cd ../NDAdrop-websocket-server/
 
 echo "========== pushing to backend repo =========="
