@@ -2,6 +2,7 @@
 import { useSocketStore } from '@/stores/SocketStore';
 import { Peer } from '../logic/Peer';
 import { formatTime } from '@/logic/Logic';
+import { DateTime } from 'luxon';
 
 export default {
     props: {
@@ -16,7 +17,7 @@ export default {
         }
     },
     methods: {
-        ft(timestamp: Date) {
+        ft(timestamp: DateTime) {
             return formatTime(timestamp);
         },
         selectPeer() {
@@ -24,7 +25,7 @@ export default {
         },
         setName() {
             this.peer.setName(this.myName);
-            const socket = useSocketStore().socket;
+            const socket: any = useSocketStore().socket;
             console.log("changin ")
             if(socket)
                 socket.send(JSON.stringify({ type: 'change-username', uuid: this.peer.getUID(), newName: this.peer.getName()}));
