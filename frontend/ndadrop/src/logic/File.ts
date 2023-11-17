@@ -183,6 +183,7 @@ export class File {
                   downloadLink.href = URL.createObjectURL(blob);
                   downloadLink.download = this.fileName;
                   downloadLink.click();
+                  downloadLink.remove();
                   this.websocket.destroy();
                   dataArray = [];
               } else {
