@@ -5,8 +5,8 @@ export function importSimplePeer(isInitiator = false) {
       const peerInstance = new SimplePeer({
         initiator: isInitiator, config: {
           iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            // { urls: 'turn:main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site:3478', username: 'your-username', credential: 'your-password' },
+            // { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'turn:main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site:3478', username: 'your-username', credential: 'your-password' },
           ],
         },
       });
