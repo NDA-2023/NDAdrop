@@ -6,7 +6,26 @@ export function importSimplePeer(isInitiator = false) {
         initiator: isInitiator, config: {
           iceServers: [
             // { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'turn:main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site:443?transport=udp', username: 'your-username', credential: 'your-password' },
+            {
+              urls: "turn:a.relay.metered.ca:80",
+              username: "19dbfbe87f4464e3e24677c7",
+              credential: "vRCG6Pbt8DIi3uXu",
+            },
+            {
+              urls: "turn:a.relay.metered.ca:80?transport=tcp",
+              username: "19dbfbe87f4464e3e24677c7",
+              credential: "vRCG6Pbt8DIi3uXu",
+            },
+            {
+              urls: "turn:a.relay.metered.ca:443",
+              username: "19dbfbe87f4464e3e24677c7",
+              credential: "vRCG6Pbt8DIi3uXu",
+            },
+            {
+              urls: "turn:a.relay.metered.ca:443?transport=tcp",
+              username: "19dbfbe87f4464e3e24677c7",
+              credential: "vRCG6Pbt8DIi3uXu",
+            },
           ],
         },
       });
