@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Message } from '../logic/Message';
 import { formatTime } from '../logic/Logic';
+import { DateTime } from 'luxon';
 
 export default {
   props: {
@@ -18,7 +19,7 @@ export default {
     }
   },
   methods: {
-        ft(timestamp: Date) {
+        ft(timestamp: DateTime) {
             return formatTime(timestamp);
         }
     }

@@ -63,11 +63,11 @@ export class File {
     private setupEventListeners() {
       let dataArray: Uint8Array[] = [];
         if (this.websocket) {
-            const me = usePeersStore().getMyself();
+            const me = usePeersStore().getMyself;
             // Event: When the peer is signaling to the other peer
             this.websocket.on('signal', (data: any) => {
                 // console.log('SIGNAL', JSON.stringify(data));
-                const socket = useSocketStore().socket;
+                const socket: any = useSocketStore().socket;
                 if(socket)
                   socket.send(JSON.stringify({ type: 'signal', data: data, to: this.peer.getUID(), from: me.getUID(), fileID: this.UUID, fileName: this.fileName}));
             });

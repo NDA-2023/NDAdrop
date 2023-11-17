@@ -4,10 +4,12 @@ import TopBar from './components/TopBar.vue'
 import { usePeersStore } from './stores/PeersStore';
 import { useChatStore } from './stores/ChatStore';
 import { useSocketStore } from './stores/SocketStore';
-import type { Peer } from './logic/Peer';
+import { Peer } from './logic/Peer';
 import { importSimplePeer } from '@/plugins/simplePeerPlugin.js';
 import { useFileStore } from './stores/FileStore';
 import { File } from './logic/File';
+import { Message } from './logic/Message';
+import { DateTime } from "luxon";
 
 //TODO: toaster fixen
 
@@ -25,56 +27,88 @@ export default {
     let randomNames = ['Alice', 'Bob', 'Charlie', 'David', 'Eva', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack'];
     const peers = usePeersStore();
     const randomIndex = Math.floor(Math.random() * randomNames.length);
-    peers.addNewPeer('',randomNames[randomIndex], false, true);
-    console.log("My UUID: ", peers.getMyself().getUID());
+    peers.addNewPeer('', randomNames[randomIndex], false, true);
+    console.log("My UUID: ", peers.getMyself.getUID());
     // const chat = useChatStore();
     // chat.addMessage(peers.getPeerViaIndex(1) as Peer, "Interlinked");
   },
   mounted() {
-    const ws = new WebSocket('wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws');
-    useSocketStore().setSocket(ws);
-    ws.onopen = () => {
-      console.log('Connected to Signaling server');
-      ws.send(JSON.stringify({type: 'join', uuid: usePeersStore().getMyself().getUID(), username: usePeersStore().getMyself().getName()}));
-    };
-    ws.onmessage = (message) => {
-      let parsedMessage = JSON.parse(message.data);
-      // console.log(parsedMessage);
-      if (parsedMessage.type === "onlineUsers"){
-        updateOnlineUsersList(parsedMessage.data);
-      } else {
-        let sendingPeer = useFileStore().getFileOnUUID(parsedMessage.fileID);
-        if (!sendingPeer){
-          console.log("Creating receiving websocket")
-          importSimplePeer(false).then((peerInstance) => {
-            let peer = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '',usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
-            useFileStore().addFile(peer);
-            peer.websocket.signal(parsedMessage.data);
-          });
-        }else{
-          // console.log("websocket exists")
-          sendingPeer?.websocket.signal(parsedMessage.data);
-        }
-      }
-    };
-    ws.onerror = (message) => {
-      console.log("Error: cannot connect to signaling server");
-    };
+    this.setupWebsocketServer();
+    this.setupPersistentServer();
   },
+  methods: {
+    setupWebsocketServer() {
+      const ws = new WebSocket('wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws');
+      useSocketStore().setSocket(ws);
+      ws.onopen = () => {
+        console.log('Connected to Signaling server');
+        ws.send(JSON.stringify({ type: 'join', uuid: usePeersStore().getMyself.getUID(), username: usePeersStore().getMyself.getName() }));
+      };
+      ws.onmessage = (message) => {
+        let parsedMessage = JSON.parse(message.data);
+        switch (parsedMessage.type) {
+          case "onlineUsers":
+            updateOnlineUsersList(parsedMessage.data);
+            break;
+          case "chat-message":
+            receivedChatMessage(parsedMessage);
+            break;
+          default:
+            let sendingPeer = useFileStore().getFileOnUUID(parsedMessage.fileID);
+            if (!sendingPeer) {
+              console.log("Creating receiving websocket")
+              importSimplePeer(false).then((peerInstance) => {
+                let peer = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
+                useFileStore().addFile(peer);
+                peer.websocket.signal(parsedMessage.data);
+              });
+            }
+            else {
+              sendingPeer?.websocket.signal(parsedMessage.data);
+            }
+            break;
+        }
+      };
+      ws.onerror = (message) => {
+        console.log("Error: cannot connect to signaling server");
+      };
+    },
+    setupPersistentServer() {
+      const persistent = new WebSocket('wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws-persistent');
+      useSocketStore().setPersistent(persistent);
+      persistent.onopen = () => {
+        console.log('Connected to Persistent server');
+        persistent.send(JSON.stringify({ type: 'get-messages' }));
+      };
+      persistent.onmessage = (message: any) => {
+        let parsedMessage = JSON.parse(message.data);
+        switch (parsedMessage.type) {
+          case "get-messages":
+            receivedSessionMessages(parsedMessage);
+            break;
+          default:
+            break;
+        }
+      };
+      persistent.onerror = (message) => {
+        console.log("Error: cannot connect to persistent server");
+      };
+    }
+  }
 }
 
 //*** AVAILABLE USERS LIST ***//
 function updateOnlineUsersList(onlineUsers: any) {
   // console.log("Updating users")
   const peersStore = usePeersStore();
-  const foundUsers = [peersStore.getPeerViaIndex(0).getUID(),];
-  onlineUsers.forEach((user:any) => {
+  const foundUsers = [peersStore.getMyself.getUID(),];
+  onlineUsers.forEach((user: any) => {
     let foundUser: Peer = usePeersStore().getPeerViaUID(user[0]) as Peer
     foundUsers.push(user[0]);
-    if (!foundUser){
-      peersStore.addNewPeer(user[0],user[1], false, false); 
+    if (!foundUser) {
+      peersStore.addNewPeer(user[0], user[1], false, false);
     } else {
-      if(user[1] != foundUser.getName()){ // Change username
+      if (user[1] != foundUser.getName()) { // Change username
         foundUser.setName(user[1]);
       }
     }
@@ -84,6 +118,32 @@ function updateOnlineUsersList(onlineUsers: any) {
       peersStore.removePeer(peer as Peer);
     }
   });
+}
+
+function receivedChatMessage(message: any) {
+  const peers = usePeersStore();
+  const chat = useChatStore();
+  chat.addMessage(peers.getPeerViaUID(message.uuid) as Peer, message.content);
+}
+
+function receivedSessionMessages(sessions: any) {
+  const chat = useChatStore();
+  const data = sessions.result.rows;
+  let currentSession = data[0].session;
+  let arraySessions: Array<Array<Message>> = new Array<Array<Message>>([]);
+  let currentSessionIndex = 0;
+  for (let i = 0; i < data.length; i++) {
+    const senttime = DateTime.fromISO(data[i].senttime);
+    if (currentSession == data[i].session) {
+      arraySessions[currentSessionIndex].push(new Message(new Peer('no uuid',data[i].peername), data[i].content, senttime));
+    } else {
+      currentSession = data[i].session;
+      arraySessions.push([]);
+      arraySessions[++currentSessionIndex].push(new Message(new Peer('no uuid',data[i].peername), data[i].content, senttime));
+    }
+  }
+
+  chat.sessions = arraySessions;
 }
 
 </script>

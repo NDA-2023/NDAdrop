@@ -1,14 +1,15 @@
+import { DateTime } from 'luxon';
 import { Peer } from './Peer'
 
 export class Message {
     private peer: Peer;
     private contents: string;
-    private sentTime: Date;
+    private sentTime: DateTime;
 
-    constructor(peer: Peer, contents: string, timestamp: Date | null = null) {
+    constructor(peer: Peer, contents: string, timestamp: DateTime | null = null) {
         this.peer = peer;
         this.contents = contents;
-        this.sentTime = timestamp === null ? new Date() : timestamp;
+        this.sentTime = timestamp === null ? DateTime.now() : timestamp;
     }
 
     public getPeer(): Peer {
@@ -19,7 +20,7 @@ export class Message {
         return this.contents;
     }
 
-    public getTimestamp(): Date {
+    public getTimestamp(): DateTime {
         return this.sentTime;
     }
 

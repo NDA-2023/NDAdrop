@@ -2,8 +2,14 @@
 
 const http = require('http');
 const WebSocket = require('ws');
+// Load the Platform.sh configuration
+const config = require('platformsh-config').config();
 
-const server = http.createServer();
+
+const server = http.createServer(function (request, response) {
+  response.writeHead(200, { "Content-Type": "application/json" });
+  response.end("Hello world!");
+});
 const wss = new WebSocket.Server({ server });
 
 // Store connected clients
@@ -26,6 +32,9 @@ wss.on('connection', (ws) => {
             break;
           case 'join':
             handleJoin(ws,parsedMessage.uuid, parsedMessage.username);
+            break;
+          case 'chat-message':
+            handleChatMessage(ws, parsedMessage);
             break;
           default:
             console.error('Unknown message type:', parsedMessage.type);
@@ -101,7 +110,21 @@ function handleSignal(sender, signalMessage) {
     }
 }
 
+function handleChatMessage(sender, chatMessage) {
+  clients.forEach((clientws, clientuuid) => {
+    if (clientuuid !== chatMessage.uuid) {
+      clientws.send(JSON.stringify(chatMessage));
+    }
+  })
+}
 
-server.listen(3001, () => {
-  console.log('WebSocket server is running on port 3001');
-});
+try {
+  server.listen(config.port, () => {
+    console.log('WebSocket server is running on port ' + config.port.toString());
+  });
+} catch (error) {
+  //for when running on localhost
+  server.listen(3001, () => {
+    console.log('WebSocket server is running on port 3001');
+  });
+}
