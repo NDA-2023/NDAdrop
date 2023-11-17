@@ -10,17 +10,17 @@ const router = createRouter({
       redirect: { name: 'home' }
     },
     {
-      path: '/NDAdrop/',
+      path: '/',
       name: 'home',
       component: HomeView,
     },
     {
-      path: '/NDAdrop/chat',
+      path: '/chat',
       name: 'chat',
       component: ChatView,
     },
     {
-      path: '/NDAdrop/about',
+      path: '/about',
       name: 'about',
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
