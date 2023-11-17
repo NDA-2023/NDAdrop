@@ -26,10 +26,10 @@ import { useScreenShareStore } from '@/stores/ScreenShareStore';
       onClick() {
         // Toggle the isActive state
         this.isActive = !this.isActive;
-        console.log("Staring screen share with: ", this.peer.getName());
         // Emit the click event
         this.$emit('click');
         if (this.isActive){
+          console.log("Staring screen share with ", this.peer.getName());
           importSimplePeer(true).then((peerInstance) => {
             let screenShareSocket = new ScreenShare('', this.peer, peerInstance);
             useScreenShareStore().addScreenShare(screenShareSocket);
@@ -37,6 +37,7 @@ import { useScreenShareStore } from '@/stores/ScreenShareStore';
             console.error('Error getting SimplePeer: ', error);
           });
         } else {
+          console.log("Stopping screen share with ", this.peer.getName());
           //search on this.peer in store
           //call destroy
         }
