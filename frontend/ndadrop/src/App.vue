@@ -38,7 +38,7 @@ export default {
   },
   methods: {
     setupWebsocketServer() {
-      const ws = new WebSocket('wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws');
+      const ws = new WebSocket("ws://localhost:3001");//'wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws');
       useSocketStore().setSocket(ws);
       ws.onopen = () => {
         console.log('Connected to Signaling server');

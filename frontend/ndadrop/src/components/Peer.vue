@@ -3,6 +3,7 @@ import { useSocketStore } from '@/stores/SocketStore';
 import { Peer } from '../logic/Peer';
 import { formatTime } from '@/logic/Logic';
 import { DateTime } from 'luxon';
+import RoundButton from './RoundButton.vue';
 
 export default {
     props: {
@@ -14,7 +15,7 @@ export default {
     data() {
         return {
             myName: this.peer.getName(),
-        }
+        };
     },
     methods: {
         ft(timestamp: DateTime) {
@@ -26,11 +27,16 @@ export default {
         setName() {
             this.peer.setName(this.myName);
             const socket: any = useSocketStore().socket;
-            console.log("changin ")
-            if(socket)
-                socket.send(JSON.stringify({ type: 'change-username', uuid: this.peer.getUID(), newName: this.peer.getName()}));
-        }
-    }
+            if (socket)
+                socket.send(JSON.stringify({ type: "change-username", uuid: this.peer.getUID(), newName: this.peer.getName() }));
+        },
+        handleScreenShareClick() {
+            // Handle the click event on the round button
+            // This will not trigger the parent button's click event
+            // ...
+        },
+    },
+    components: { RoundButton }
 }
 </script>
 
@@ -62,11 +68,14 @@ export default {
             </div>
             <!-- If that peer is not selected -->
             <div v-if="!peer.isSelected()">
-                <button type="button" class="list-group-item list-group-item-action lg" @click="selectPeer">
-                    <div class="ms-2 me-auto">
-                        <div class="fw-bold">{{ peer.getName() }}</div>
+                <button type="button" class="list-group-item list-group-item-action lg" style="display: flex; align-items: center;" @click="selectPeer">
+                    <RoundButton :peer="peer" />
+                    <div>
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">{{ peer.getName() }}</div>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">Joined at: {{ ft(peer.getJoinedTime()) }}</span>
                     </div>
-                    <span class="badge bg-primary rounded-pill">Joined at: {{ ft(peer.getJoinedTime()) }}</span>
                 </button>
             </div>
         </div>
