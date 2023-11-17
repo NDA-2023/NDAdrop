@@ -5,7 +5,7 @@ export function importSimplePeer(isInitiator = false) {
       const peerInstance = new SimplePeer({
         initiator: isInitiator, config: {
           iceServers: [
-            // { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun.l.google.com:19302' },
             {
               urls: "turn:a.relay.metered.ca:80",
               username: "19dbfbe87f4464e3e24677c7",
