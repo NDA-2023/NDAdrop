@@ -58,9 +58,9 @@ export default {
             if (!sendingPeer) {
               console.log("Creating receiving websocket")
               importSimplePeer(false).then((peerInstance) => {
-                let peer = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
-                useFileStore().addFile(peer);
-                peer.websocket.signal(parsedMessage.data);
+                let file = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
+                useFileStore().addFile(file);
+                file.websocket.signal(parsedMessage.data);
               });
             }
             else {

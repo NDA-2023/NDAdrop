@@ -1,5 +1,6 @@
 <script lang="ts">
 import { File } from '@/logic/File';
+import { useFileStore } from '@/stores/FileStore';
 import { Toast } from 'bootstrap';
 
 export default {
@@ -30,24 +31,32 @@ export default {
             //refresh time ago
             setInterval(() => {
                 this.minutesAgo = this.sendingFile.timeAgo();
-            }, 1000)
 
-            //refresh progress bar
-            var id = setInterval(() => {
-
-                if (this.sendingFile.getProgress() >= 100 || !this.sendingFile){
-                    this.isComplete = true;
-                    clearInterval(id);
-                }
+                this.isComplete = this.sendingFile.getProgress() >= 100;
                     
-                console.log(this.isComplete)
-                // else
-                //     //TODO: added random progress! -> used for demonstration purposes
-                //     this.sendingFile.setProgress(this.sendingFile.getProgress() + (Math.random() * 10))
+                // console.log(this.sendingFile.getProgress());
+            }, 1000)
+            
+            //DEPRECATED:
+            //refresh progress bar
+            // var id = setInterval(() => {
 
-            }, 100)
+            //     if (this.sendingFile.getProgress() >= 100 || !this.sendingFile){
+            //         this.isComplete = true;
+            //         clearInterval(id);
+            //     }
+                    
+            //     console.log(this.isComplete)
+            //     // else
+            //     //     //TODO: added random progress! -> used for demonstration purposes
+            //     //     this.sendingFile.setProgress(this.sendingFile.getProgress() + (Math.random() * 10))
+
+            // }, 100)
+        },
+        remove() {
+            useFileStore().removeFileOnUUID(this.sendingFile.getUID());
         }
-    }
+    },
 }
 </script>
 
@@ -65,9 +74,13 @@ export default {
         <div class="toast-body">
             <div class="progress" role="progressbar" aria-label="Basic example" :aria-valuenow="sendingFile.getProgress()"
                 aria-valuemin="0" aria-valuemax="100">
-                <div :class="'progress-bar' + (isComplete ? 'green' : ' blue')"
+                <div :class="'progress-bar' + (isComplete ? ' green' : ' blue')"
                     :style="'width: ' + sendingFile.getProgress() + '%'"></div>
                 <div v-if="isComplete" class="done">Done</div>
+            </div>
+            <div v-if="!sendingFile.websocket.initiator" class="d-flex m-2 justify-content-around">
+                <button type="button" class="btn btn-danger" @click="sendingFile.decline()">Decline</button>
+                <button type="button" class="btn btn-success" @click="sendingFile.accept()">Accept</button>
             </div>
         </div>
     </div>
