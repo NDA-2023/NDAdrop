@@ -97,7 +97,7 @@ export default {
           });
         })
       });
-      // this.sendingFiles = [];
+      this.sendingFiles = [];
       this.cancelFile();
       this.fileNames = [];
     }
