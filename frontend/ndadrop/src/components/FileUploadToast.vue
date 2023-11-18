@@ -80,7 +80,8 @@ export default {
             </div>
             <div v-if="!sendingFile.websocket.initiator" class="d-flex m-2 justify-content-around">
                 <button type="button" class="btn btn-danger" @click="sendingFile.decline()">Decline</button>
-                <button type="button" class="btn btn-success" @click="sendingFile.accept()">Accept</button>
+                <button type="button" class="btn green" @click="sendingFile.accept()">Accept</button>
+                <button type="button" class="btn btn-info" @click="">Preview</button>
             </div>
         </div>
     </div>

@@ -8,11 +8,15 @@ import { useFileStore } from '@/stores/FileStore';
 import type { Peer } from '@/logic/Peer';
 import { importSimplePeer } from '@/plugins/simplePeerPlugin';
 import { v1 as uuid } from 'uuid';
+import QR from '@/components/QR.vue';
+
+import { useChatStore } from '@/stores/ChatStore';
 
 export default {
   components: {
     PeerList: PeerList,
-    FileUploadToast: FileUploadToast
+    FileUploadToast: FileUploadToast,
+    QR: QR,
   },
   // data() {
   //     return {
@@ -24,12 +28,15 @@ export default {
     fileNames: [] as Array<string>,
     sendingFiles: [] as Array<any>,
     popover: null as Popover | null,
-    
+
   }),
   computed: {
     computedSendingFiles() {
       let sendFiles: Array<File> = useFileStore().files as Array<File>;
       return sendFiles;
+    },
+    showingQR() {
+      return useChatStore().showingQR;
     },
     /**
      * returns all the fileNames in the fileNames array as a single string with ', ' between every fileName
@@ -94,7 +101,7 @@ export default {
           console.log("Creating Sender Websocket");
           importSimplePeer(true).then((peerInstance) => {
             let uid: string = uuid();
-            files.addFile(new File(uid,file, file.name, peer as Peer, peerInstance));
+            files.addFile(new File(uid, file, file.name, peer as Peer, peerInstance));
           }).catch((error) => {
             console.error('Error getting SimplePeer: ', error);
           });
@@ -112,6 +119,11 @@ export default {
     <div class="row">
       <PeerList />
     </div>
+    <Transition name="fade" mode="out-in">
+      <div v-if="showingQR">
+        <QR />
+      </div>
+    </Transition>
   </div>
 
   <!-- File Control -->
@@ -201,5 +213,15 @@ export default {
   .toast-container {
     padding-bottom: 0;
   }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

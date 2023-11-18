@@ -6,6 +6,7 @@ export const useChatStore = defineStore('messages', {
   state: () => ({
     messages: [] as Array<Message>,
     sessions: [] as Array<Array<Message>>,
+    showingQR: false,
   }),
   actions: {
     addMessage(peer: Peer, content: string): Message {

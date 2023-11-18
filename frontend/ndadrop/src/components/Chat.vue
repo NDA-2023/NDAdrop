@@ -6,13 +6,16 @@ import { useChatStore } from '@/stores/ChatStore';
 import { useSocketStore } from '@/stores/SocketStore';
 import { Peer } from '@/logic/Peer';
 import type { Message as MessageType } from '@/logic/Message';
+import IconQR from './icons/IconQR.vue';
 import IconHistory from './icons/IconHistory.vue';
-import { DateTime } from 'luxon';
+import QR from './QR.vue';
 
 export default {
   components: {
     IconHistory: IconHistory,
+    IconQR: IconQR,
     MessageVue: MessageVue,
+    QR
   },
   computed: {
     computedMessages() {
@@ -28,6 +31,7 @@ export default {
     return {
       typedMessage: "" as string,
       showingHistory: false,
+      showingQR: false,
       data: null,
     }
   },
@@ -63,6 +67,10 @@ export default {
       // reset message
       this.typedMessage = "";
     },
+    toggleQR() {
+      const chats = useChatStore()
+      chats.showingQR = !chats.showingQR;
+    }
   }
 }
 </script>
@@ -71,11 +79,15 @@ export default {
   <div class="list-group">
     <div class="chat-background overflow-scroll">
       <div class="d-flex justify-content-end">
+        <button class="btn" @click="toggleQR()">
+          <IconQR />
+        </button>
         <button class="btn" @click="() => { showingHistory = !showingHistory }">
           <IconHistory />
         </button>
       </div>
       <div v-if="!showingHistory">
+        
         <div v-for="message in computedMessages">
           <MessageVue :message=message />
         </div>
@@ -90,8 +102,7 @@ export default {
                   Session {{ index }}
                 </button>
               </h2>
-              <div :id="'collapse' + index" class="accordion-collapse collapse"
-                data-bs-parent="#messagesHistory">
+              <div :id="'collapse' + index" class="accordion-collapse collapse" data-bs-parent="#messagesHistory">
                 <div class="accordion-body">
                   <div v-for="message in session">
                     <MessageVue :message=message />
@@ -151,5 +162,15 @@ export default {
 
 .session-background {
   background-color: transparent;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
