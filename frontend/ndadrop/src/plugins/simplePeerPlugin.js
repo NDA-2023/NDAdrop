@@ -1,9 +1,16 @@
-export function importSimplePeer(isInitiator = false) {
+/**
+ * @param {boolean} isInitiator - Whether the peer should be the initiator.
+ * @param {MediaStream|null} stream - The optional MediaStream.
+ * @returns {Promise<SimplePeer.Instance>} - A Promise resolving to the SimplePeer instance.
+ */
+export function importSimplePeer(isInitiator = false, stream = null) {
   return import('https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js')
     .then(() => {
       // console.log(isInitiator);
       const peerInstance = new SimplePeer({
-        initiator: isInitiator, config: {
+        initiator: isInitiator,
+        stream: stream,      
+        config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             {
@@ -28,6 +35,7 @@ export function importSimplePeer(isInitiator = false) {
             },
           ],
         },
+        
       });
       return peerInstance;
     })

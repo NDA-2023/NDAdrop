@@ -4,6 +4,9 @@ import { Peer } from '../logic/Peer';
 import { formatTime } from '@/logic/Logic';
 import { DateTime } from 'luxon';
 import RoundButton from './RoundButton.vue';
+import { importSimplePeer } from '@/plugins/simplePeerPlugin';
+import { ScreenShare } from '@/logic/ScreenShare';
+import { useScreenShareStore } from '@/stores/ScreenShareStore';
 
 export default {
     props: {
@@ -15,6 +18,7 @@ export default {
     data() {
         return {
             myName: this.peer.getName(),
+            isScreenShareActive: false,
         };
     },
     methods: {
@@ -31,9 +35,32 @@ export default {
                 socket.send(JSON.stringify({ type: "change-username", uuid: this.peer.getUID(), newName: this.peer.getName() }));
         },
         handleScreenShareClick() {
-            // Handle the click event on the round button
-            // This will not trigger the parent button's click event
-            // ...
+            let screenShareStream = null;
+            this.isScreenShareActive = !this.isScreenShareActive;
+            if (this.isScreenShareActive){
+                console.log("Staring screen share with ", this.peer.getName());
+                navigator.mediaDevices.getDisplayMedia({ video: true })
+                .then((stream) => {
+                    
+                    screenShareStream = stream; // Store the screen sharing stream
+                    importSimplePeer(true, stream).then((peerInstance) => {
+                        let screenShareSocket = new ScreenShare('', this.peer, peerInstance, null);
+                        useScreenShareStore().addScreenShare(screenShareSocket);
+                    }).catch((error) => {
+                        console.error('Error getting SimplePeer: ', error);
+                    });
+
+                }).catch((error) => {
+                  console.error('Error accessing screen share:', error);
+                //   this.isActive = !this.isActive;
+                });
+            } else {
+            console.log("Stopping screen share with ", this.peer.getName());
+                let screenShare = useScreenShareStore().getScreenShareOnPeer(this.peer);
+                screenShare?.websocket.destroy();
+                if (screenShareStream)
+                    screenShareStream = null
+            }
         },
     },
     components: { RoundButton }
@@ -69,7 +96,7 @@ export default {
             <!-- If that peer is not selected -->
             <div v-if="!peer.isSelected()">
                 <button type="button" class="list-group-item list-group-item-action lg" style="display: flex; align-items: center;" @click="selectPeer">
-                    <RoundButton :peer="peer" />
+                    <RoundButton :isActive="isScreenShareActive" @screenshare-click="handleScreenShareClick" :peer="peer" />
                     <div>
                         <div class="ms-2 me-auto">
                             <div class="fw-bold">{{ peer.getName() }}</div>

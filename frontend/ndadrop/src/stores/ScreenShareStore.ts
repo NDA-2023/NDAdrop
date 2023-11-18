@@ -1,3 +1,4 @@
+import type { Peer } from '@/logic/Peer';
 import type { ScreenShare } from '@/logic/ScreenShare';
 import { defineStore } from 'pinia'
 
@@ -20,7 +21,13 @@ export const useScreenShareStore = defineStore('screens', {
   }},
   getters: {
     getScreenShareOnUUID: (state) => {
-      return (screenShareUID: string) => state.screens.find((screen) => screen.getUUID() === screenShareUID);
-    }   
+        return (screenShareUID: string) => state.screens.find((screen) => screen.getUUID() === screenShareUID);
+    },   
+    getScreenShareOnPeer: (state) => {
+        return (screenSharePeer: Peer) => state.screens.find((screen) => screen.getPeer() === screenSharePeer);
+    } ,
+    getScreenShares: (state) => {
+        return state.screens;
+    } 
 }
 })

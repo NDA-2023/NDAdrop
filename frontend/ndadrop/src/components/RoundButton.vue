@@ -1,46 +1,25 @@
 <!-- RoundButton.vue -->
 <template>
-    <button class="round-button" @click.stop="onClick" :class="{ 'active': isActive }">
-      <img src="@/assets/ScreenShareIcon.png" alt="Round Icon" class="round-icon" :class="{ 'active-icon': isActive }"/>    
+    <button class="round-button" @click.stop="onClick" :class="{ 'active': $props.isActive }">
+      <img src="@/assets/ScreenShareIcon.png" alt="Round Icon" class="round-icon" :class="{ 'active-icon': $props.isActive }"/>    
     </button>
 </template>
   
 <script lang="ts">import { Peer } from '@/logic/Peer';
-  import { ScreenShare } from '@/logic/ScreenShare';
-  import { importSimplePeer } from '@/plugins/simplePeerPlugin';
-import { useScreenShareStore } from '@/stores/ScreenShareStore';
-
   export default {
-    data() {
-      return {
-        isActive: false,
-      };
-    },
     props: {
         peer: {
             type: Peer,
             required: true
-        }
+        },
+        isActive: {
+            type: Boolean,
+            required: true
+        },
     },
     methods: {
       onClick() {
-        // Toggle the isActive state
-        this.isActive = !this.isActive;
-        // Emit the click event
-        this.$emit('click');
-        if (this.isActive){
-          console.log("Staring screen share with ", this.peer.getName());
-          importSimplePeer(true).then((peerInstance) => {
-            let screenShareSocket = new ScreenShare('', this.peer, peerInstance);
-            useScreenShareStore().addScreenShare(screenShareSocket);
-          }).catch((error) => {
-            console.error('Error getting SimplePeer: ', error);
-          });
-        } else {
-          console.log("Stopping screen share with ", this.peer.getName());
-          //search on this.peer in store
-          //call destroy
-        }
+        this.$emit('screenshare-click');
       },
     },
   };

@@ -10,6 +10,8 @@ import { useFileStore } from './stores/FileStore';
 import { File } from './logic/File';
 import { Message } from './logic/Message';
 import { DateTime } from "luxon";
+import { useScreenShareStore } from './stores/ScreenShareStore';
+import { ScreenShare } from './logic/ScreenShare';
 
 //TODO: toaster fixen
 
@@ -20,6 +22,12 @@ export default {
   components: {
     TopBar: TopBar
   },
+  computed: {
+    screenShares() {
+      // Assuming useScreenShareStore() returns a store with a 'getScreenShares' method
+      return useScreenShareStore().getScreenShares;
+    },
+  },
   // computed: {
   //   ...mapState(usePeersStore, ['peers'])
   // },
@@ -28,7 +36,7 @@ export default {
     const peers = usePeersStore();
     const randomIndex = Math.floor(Math.random() * randomNames.length);
     peers.addNewPeer('', randomNames[randomIndex], false, true);
-    console.log("My UUID: ", peers.getMyself.getUID());
+    // console.log("My UUID: ", peers.getMyself.getUID());
     // const chat = useChatStore();
     // chat.addMessage(peers.getPeerViaIndex(1) as Peer, "Interlinked");
   },
@@ -54,19 +62,35 @@ export default {
             receivedChatMessage(parsedMessage);
             break;
           default:
-            let sendingPeer = useFileStore().getFileOnUUID(parsedMessage.fileID);
+            if (!parsedMessage.screenShareID){
+              let sendingPeer = useFileStore().getFileOnUUID(parsedMessage.fileID);
+              if (!sendingPeer) {
+                console.log("Creating file receiving websocket")
+                importSimplePeer(false).then((peerInstance) => {
+                  let peer = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
+                  useFileStore().addFile(peer);
+                  peer.websocket.signal(parsedMessage.data);
+                });
+              }
+              else {
+                sendingPeer?.websocket.signal(parsedMessage.data);
+              }
+           } else {
+            let sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
             if (!sendingPeer) {
-              console.log("Creating receiving websocket")
+              console.log("Create receiving screenshare socket");
               importSimplePeer(false).then((peerInstance) => {
-                let peer = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
-                useFileStore().addFile(peer);
+                let peer = new ScreenShare(parsedMessage.screenShareID, usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance, this.$refs[`video-test`]);
+                useScreenShareStore().addScreenShare(peer);
                 peer.websocket.signal(parsedMessage.data);
               });
+            } else {
+              console.log("Screenshare socket already exists");
+              let peer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
+              peer?.websocket.signal(parsedMessage.data);
             }
-            else {
-              sendingPeer?.websocket.signal(parsedMessage.data);
-            }
-            break;
+           }
+          break;
         }
       };
       ws.onerror = (message) => {
@@ -166,6 +190,12 @@ function receivedSessionMessages(sessions: any) {
       <component :is="Component" :key="$route.path"></component>
     </Transition>
   </RouterView>
+  <div>
+    <h2>Video Streams</h2>
+    <ul>
+      <video ref="video-test" muted controls></video>
+    </ul>
+  </div>
 </template>
 
 <style scoped>
