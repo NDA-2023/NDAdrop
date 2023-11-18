@@ -13,11 +13,6 @@ import { DateTime } from "luxon";
 import { useScreenShareStore } from './stores/ScreenShareStore';
 import { ScreenShare } from './logic/ScreenShare';
 
-//TODO: toaster fixen
-
-//TODO: Timestamp die niet meer werkt? -> opl. bijhouden op signaling server (op joining client zijn ze enkel fout)
-//TODO: max file size?
-
 export default {
   components: {
     TopBar: TopBar
@@ -28,6 +23,25 @@ export default {
       return useScreenShareStore().getScreenShares;
     },
   },
+  // data (){
+  //   return {
+  //     StreamKey: 0
+  //   }
+  // },
+  // watch: {
+  //   // Watch for changes in the screenShare objects
+  //   screenShares: {
+  //     deep: true,
+  //     handler(newScreenShares) {
+  //       // Check for stream and update hasStream property
+  //       newScreenShares.forEach((screenShare: ScreenShare) => {
+  //         if (screenShare.hasStream) {
+  //           this.StreamKey += 1;
+  //         }
+  //       });
+  //     },
+  //   },
+  // },
   // computed: {
   //   ...mapState(usePeersStore, ['peers'])
   // },
@@ -36,7 +50,7 @@ export default {
     const peers = usePeersStore();
     const randomIndex = Math.floor(Math.random() * randomNames.length);
     peers.addNewPeer('', randomNames[randomIndex], false, true);
-    // console.log("My UUID: ", peers.getMyself.getUID());
+    console.log("My UUID: ", peers.getMyself.getUID());
     // const chat = useChatStore();
     // chat.addMessage(peers.getPeerViaIndex(1) as Peer, "Interlinked");
   },
@@ -65,11 +79,15 @@ export default {
             if (!parsedMessage.screenShareID){
               let sendingPeer = useFileStore().getFileOnUUID(parsedMessage.fileID);
               if (!sendingPeer) {
-                console.log("Creating file receiving websocket")
                 importSimplePeer(false).then((peerInstance) => {
-                  let peer = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
-                  useFileStore().addFile(peer);
-                  peer.websocket.signal(parsedMessage.data);
+                  sendingPeer = useFileStore().getFileOnUUID(parsedMessage.fileID);
+                  if (!sendingPeer){
+                    console.log("Creating file receiving websocket")
+                    let peer = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
+                    useFileStore().addFile(peer);
+                    peer.websocket.signal(parsedMessage.data);
+                  } else
+                    sendingPeer.websocket.signal(parsedMessage.data);
                 });
               }
               else {
@@ -77,17 +95,22 @@ export default {
               }
            } else {
             let sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
+            console.log(useScreenShareStore().screens);
             if (!sendingPeer) {
-              console.log("Create receiving screenshare socket");
               importSimplePeer(false).then((peerInstance) => {
-                let peer = new ScreenShare(parsedMessage.screenShareID, usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance, this.$refs[`video-test`]);
-                useScreenShareStore().addScreenShare(peer);
-                peer.websocket.signal(parsedMessage.data);
+                sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
+                if (!sendingPeer){
+                  console.log("Create receiving screenshare socket: ", parsedMessage.screenShareID);
+                  let peer = new ScreenShare(parsedMessage.screenShareID, usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance, this.addVideoTag(parsedMessage.screenShareID));
+                  useScreenShareStore().addScreenShare(peer);
+                  // console.log(useScreenShareStore().screens);
+                  peer.websocket.signal(parsedMessage.data);
+                } else
+                  sendingPeer.websocket.signal(parsedMessage.data);
               });
             } else {
               console.log("Screenshare socket already exists");
-              let peer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
-              peer?.websocket.signal(parsedMessage.data);
+              sendingPeer.websocket.signal(parsedMessage.data);
             }
            }
           break;
@@ -96,6 +119,18 @@ export default {
       ws.onerror = (message) => {
         console.log("Error: cannot connect to signaling server");
       };
+    },
+    addVideoTag(id: string) {
+      // Create a new video element
+      const newVideo = document.createElement('video');
+      // Set attributes for the video element
+      newVideo.muted = true;
+      newVideo.controls = true;
+      // Set a unique ref for the video element
+      const refName = `video-${id}`;
+      newVideo.setAttribute('ref', refName);
+      newVideo.classList.add('VideoStream');
+      return newVideo;
     },
     setupPersistentServer() {
       const persistent = new WebSocket('wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws-persistent');
@@ -190,12 +225,37 @@ function receivedSessionMessages(sessions: any) {
       <component :is="Component" :key="$route.path"></component>
     </Transition>
   </RouterView>
-  <div>
+  <!-- <div v-show="screenShares.length > 0">
+    <h2>Video Streams</h2>
+    <ul id="VideoStreamList">
+    </ul>
+  </div> -->
+  <div >
     <h2>Video Streams</h2>
     <ul>
-      <video ref="video-test" muted controls></video>
+      <li v-for="screenShare in screenShares" :key="screenShare.getUUID()">
+        <template v-if="!screenShare.websocket.initiator">
+          <span> {{ screenShare.getPeer().getName() }} is screen sharing with you</span>
+          <video class="VideoStream" v-if="screenShare.stream" :srcObject="screenShare.stream" autoplay muted controls></video>
+        </template>
+      </li>
     </ul>
   </div>
+
+  <!-- <div v-show="screenShares.length > 0 && screenShares.every(screenShare => !screenShare.websocket.initiator)">
+    <h2>Active Video Streams</h2>
+    <ul class="stream-list">
+      <li v-for="screenShare in screenShares" :key="screenShare.getUUID()" class="stream-item">
+        <template v-if="!screenShare.websocket.initiator">
+          <div class="stream-info">
+            <p class="stream-status" v-if="screenShare.hasStream">{{ screenShare.getPeer().getName() }} is screen sharing with you</p>
+            <p class="stream-status" v-else>Pending screen sharing...</p>
+          </div>
+          <video class="VideoStream" v-if="screenShare.hasStream" :srcObject="screenShare.stream" autoplay muted controls></video>
+        </template>
+      </li>
+    </ul>
+  </div> -->
 </template>
 
 <style scoped>
@@ -273,5 +333,9 @@ nav a:first-of-type {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.VideoStream{
+  width: 10%;
 }
 </style>

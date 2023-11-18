@@ -18,13 +18,17 @@ export const useScreenShareStore = defineStore('screens', {
     if (index > -1) {
       this.screens.splice(index, 1);
     }
-  }},
+  },
+  getScreenShareOnUUID(screenShareUID: string){
+    return this.screens.find((screen) => screen.getUUID() === screenShareUID);
+    }, 
+},
   getters: {
-    getScreenShareOnUUID: (state) => {
-        return (screenShareUID: string) => state.screens.find((screen) => screen.getUUID() === screenShareUID);
-    },   
+    // getScreenShareOnUUID: (state) => {
+    //     return (screenShareUID: string) => state.screens.find((screen) => screen.getUUID() === screenShareUID);
+    // },   
     getScreenShareOnPeer: (state) => {
-        return (screenSharePeer: Peer) => state.screens.find((screen) => screen.getPeer() === screenSharePeer);
+        return (screenSharePeer: Peer) => state.screens.find((screen) => screen.getPeer() === screenSharePeer && screen.websocket.initiator);
     } ,
     getScreenShares: (state) => {
         return state.screens;

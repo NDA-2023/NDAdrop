@@ -8,7 +8,9 @@ export class ScreenShare {
     private UID: string;
     private peer: Peer;
     public websocket: any;
-    private videoPlayer: any;
+    public videoPlayer: any;
+    public hasStream: boolean = false;
+    public stream: any = null;
   
     constructor(UUID:string, toPeer: Peer, websocket: any, videoPlayer: any) {
         if (UUID.length == 0)
@@ -16,7 +18,6 @@ export class ScreenShare {
         else
             this.UID = UUID;
         this.peer = toPeer;
-        console.log(videoPlayer);
         this.videoPlayer = videoPlayer;
         this.websocket = websocket;
         this.setupEventListeners();
@@ -48,28 +49,26 @@ export class ScreenShare {
                 
             });
 
-                // Handle stream events
+            // Handle stream events
             this.websocket.on('stream', (stream: any) => {
-                console.log(stream);
+                // console.log(stream);
                 if (!this.websocket.initiator){
-                    this.videoPlayer.srcObject = stream;
+                    // this.videoPlayer.srcObject = stream;
+                    this.stream = stream;
+                    this.hasStream = true;
+                    // this.videoPlayer.play();
                 }
-                this.videoPlayer.play()
-                // Handle incoming stream (remote stream)
-                // this.$refs.remoteStream.srcObject = stream;
-            });
-        
-            // Event: When data is received from the other peer
-            this.websocket.on('data', (data: any) => {
-                // console.log('DATA', data.toString());
-                
-
             });
         
             // Event: When the connection is closed
             this.websocket.on('close', () => {
                 console.log('Connection closed, screen share ended.');
+                // if (this.videoPlayer && this.videoPlayer.parentNode) {
+                //     // Remove the video element from its parent
+                //     this.videoPlayer.parentNode.removeChild(this.videoPlayer);
+                // }
                 useScreenShareStore().removeScreenShareOnUUID(this.UID);
+                // this.websocket.destroy();
             });
         
             // Event: When an error occurs

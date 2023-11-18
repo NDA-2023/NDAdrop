@@ -19,6 +19,7 @@ export default {
         return {
             myName: this.peer.getName(),
             isScreenShareActive: false,
+            // screenShareStream: null as MediaStream | null,
         };
     },
     methods: {
@@ -35,14 +36,13 @@ export default {
                 socket.send(JSON.stringify({ type: "change-username", uuid: this.peer.getUID(), newName: this.peer.getName() }));
         },
         handleScreenShareClick() {
-            let screenShareStream = null;
             this.isScreenShareActive = !this.isScreenShareActive;
             if (this.isScreenShareActive){
                 console.log("Staring screen share with ", this.peer.getName());
                 navigator.mediaDevices.getDisplayMedia({ video: true })
                 .then((stream) => {
                     
-                    screenShareStream = stream; // Store the screen sharing stream
+                    // this.screenShareStream = stream; // Store the screen sharing stream
                     importSimplePeer(true, stream).then((peerInstance) => {
                         let screenShareSocket = new ScreenShare('', this.peer, peerInstance, null);
                         useScreenShareStore().addScreenShare(screenShareSocket);
@@ -51,15 +51,19 @@ export default {
                     });
 
                 }).catch((error) => {
-                  console.error('Error accessing screen share:', error);
-                //   this.isActive = !this.isActive;
+                  console.error('Error running screen share:', error);
+                  this.isScreenShareActive = false;
                 });
             } else {
             console.log("Stopping screen share with ", this.peer.getName());
                 let screenShare = useScreenShareStore().getScreenShareOnPeer(this.peer);
-                screenShare?.websocket.destroy();
-                if (screenShareStream)
-                    screenShareStream = null
+                if (screenShare){
+                    useScreenShareStore().removeScreenShareOnUUID(screenShare.getUUID())
+                    screenShare.websocket.destroy();
+                    console.log(useScreenShareStore().screens)
+                }
+                // if (this.screenShareStream)
+                //     this.screenShareStream = null
             }
         },
     },
