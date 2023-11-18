@@ -2,39 +2,50 @@
 import { pausableWatch, useBluetooth } from '@vueuse/core'
 import { ref } from 'vue';
 const { isSupported, isConnected, device, requestDevice, server, error } =
-  useBluetooth({
-    acceptAllDevices: true,
-    filters: [{
-        services: ['object_transfer']
-    }],
-    optionalServices: ['battery_service'],
-  })
+    useBluetooth({
+        acceptAllDevices: true,
+        optionalServices: ['battery_service']
+        // optionalServices: ['battery_service', 'object_transfer'],
+    })
 const batteryPercent = ref<undefined | number>()
 const isGettingBatteryLevels = ref(false)
+
+// function requestingDevice() {
+//     requestDevice();
+//     isGettingBatteryLevels.value = true;
+// }
+
+function setLoading() {
+    isGettingBatteryLevels.value = true;
+}
+
 async function getBatteryLevels() {
-  isGettingBatteryLevels.value = true
-  // Get the battery service:
-  const batteryService = await (server.value.device.gatt).getPrimaryService('battery_service')
-  // Get the current battery level
-  const batteryLevelCharacteristic =
-    await batteryService.getCharacteristic('battery_level')
-  // Listen to when characteristic value changes on `characteristicvaluechanged` event:
-  batteryLevelCharacteristic.addEventListener(
-    'characteristicvaluechanged',
-    (event: any) => {
-      batteryPercent.value = event.target.value.getUint8(0)
-    },
-  )
-  // Convert received buffer to number:
-  const batteryLevel = await batteryLevelCharacteristic.readValue()
-  batteryPercent.value = await batteryLevel.getUint8(0)
+    isGettingBatteryLevels.value = true
+    // Get the battery service:
+    const batteryService = await (server.value.device.gatt).getPrimaryService('battery_service')
+    // Get the current battery level
+    const batteryLevelCharacteristic =
+        await batteryService.getCharacteristic('battery_level')
+    // Listen to when characteristic value changes on `characteristicvaluechanged` event:
+    batteryLevelCharacteristic.addEventListener(
+        'characteristicvaluechanged',
+        (event: any) => {
+            batteryPercent.value = event.target.value.getUint8(0)
+        },
+    )
+    // Convert received buffer to number:
+    const batteryLevel = await batteryLevelCharacteristic.readValue()
+    batteryPercent.value = await batteryLevel.getUint8(0)
+    isGettingBatteryLevels.value = false;
+    const objectTransfer = await (server.value.device.gatt).getPrimaryService('object_transfer')
+
 }
 const { stop } = pausableWatch(isConnected, (newIsConnected) => {
-  if (!newIsConnected || !server.value || isGettingBatteryLevels.value) return
-  // Attempt to get the battery levels of the device:
-  getBatteryLevels()
-  // We only want to run this on the initial connection, as we will use an event listener to handle updates:
-  stop()
+    if (!newIsConnected || !server.value) return
+    // Attempt to get the battery levels of the device:
+    getBatteryLevels()
+    // We only want to run this on the initial connection, as we will use an event listener to handle updates:
+    stop()
 })
 </script>
 
@@ -44,18 +55,27 @@ const { stop } = pausableWatch(isConnected, (newIsConnected) => {
             Your browser does not support the Bluetooth Web API
         </div>
 
-        <div v-if="isSupported">
-            <button class="btn btButton d-flex justify-content-center green" @click="requestDevice()">
-                Select a Bluetooth Peer
-            </button>
-            <div v-if="error">
-                <code class="alert alert-danger">{{ error }}</code>
+        <div v-if="isSupported" class="">
+            <div class="d-flex justify-content-center">
+                <button class="btn btButton d-flex justify-content-center green" @click="requestDevice(), setLoading()">
+                    Select a Bluetooth Peer
+                </button>
+                <div v-if="isGettingBatteryLevels">
+                    <div class="spinner-grow" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <div v-if="error">
+                    <code class="alert-danger">{{ error }}</code>
+                </div>
             </div>
         </div>
     </div>
     <div class="connectionStatus">
         <div v-if="isConnected" class="alert alert-success" role="alert">
-            Connected to {{ device.name }} {{ batteryPercent+'%' }}
+            Connected to {{ device.name }} {{ batteryPercent + '%' }}
         </div>
         <div v-if="!isConnected" class="alert alert-danger" role="alert">
             Not Connected
