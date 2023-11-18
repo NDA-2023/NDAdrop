@@ -4,11 +4,12 @@ import { ref } from 'vue';
 const { isSupported, isConnected, device, requestDevice, server, error } =
     useBluetooth({
         acceptAllDevices: true,
-        optionalServices: ['battery_service']
+        //filters: [ {services: ['12345678-1234-5678-1234-56789abcdef0'],}],
+        optionalServices: ['battery_service', '12345678-1234-5678-1234-56789abcdef0', 'immediate_alert']
         // optionalServices: ['battery_service', 'object_transfer'],
     })
 const batteryPercent = ref<undefined | number>()
-const isGettingBatteryLevels = ref(false)
+const isConnecting = ref(false)
 
 // function requestingDevice() {
 //     requestDevice();
@@ -16,11 +17,12 @@ const isGettingBatteryLevels = ref(false)
 // }
 
 function setLoading() {
-    isGettingBatteryLevels.value = true;
+    isConnecting.value = true;
+    error.value = null;
 }
 
 async function getBatteryLevels() {
-    isGettingBatteryLevels.value = true
+    isConnecting.value = true
     // Get the battery service:
     const batteryService = await (server.value.device.gatt).getPrimaryService('battery_service')
     // Get the current battery level
@@ -36,8 +38,10 @@ async function getBatteryLevels() {
     // Convert received buffer to number:
     const batteryLevel = await batteryLevelCharacteristic.readValue()
     batteryPercent.value = await batteryLevel.getUint8(0)
-    isGettingBatteryLevels.value = false;
-    const objectTransfer = await (server.value.device.gatt).getPrimaryService('object_transfer')
+    isConnecting.value = false;
+
+    console.log(await (server.value.device.gatt).getPrimaryServices());
+    const objectTransfer = await (server.value.device.gatt).getPrimaryService('immediate_alert')
 
 }
 const { stop } = pausableWatch(isConnected, (newIsConnected) => {
@@ -47,6 +51,11 @@ const { stop } = pausableWatch(isConnected, (newIsConnected) => {
     // We only want to run this on the initial connection, as we will use an event listener to handle updates:
     stop()
 })
+
+pausableWatch(error, (newError) => {
+    if (error !== null)
+        isConnecting.value = false;
+})
 </script>
 
 <template>
@@ -54,19 +63,23 @@ const { stop } = pausableWatch(isConnected, (newIsConnected) => {
         <div v-if="!isSupported" class="alert alert-success" role="alert">
             Your browser does not support the Bluetooth Web API
         </div>
+        <div class="alert alert-warning" role="alert">
+            This page is unfinished: <a href="https://webbluetoothcg.github.io/web-bluetooth/#introduction-examples">web-bluetooth</a> only allows communication with BLE devices and is not traditionally used for browser to browser communication.
+
+        </div>
 
         <div v-if="isSupported" class="">
             <div class="d-flex justify-content-center">
                 <button class="btn btButton d-flex justify-content-center green" @click="requestDevice(), setLoading()">
                     Select a Bluetooth Peer
                 </button>
-                <div v-if="isGettingBatteryLevels">
-                    <div class="spinner-grow" role="status">
+                <div v-if="isConnecting">
+                    <div class="spinner-grow green" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
                 </div>
             </div>
-            <div class="">
+            <div class="d-flex justify-content-center">
                 <div v-if="error">
                     <code class="alert-danger">{{ error }}</code>
                 </div>
