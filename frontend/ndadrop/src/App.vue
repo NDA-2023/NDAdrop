@@ -23,25 +23,22 @@ export default {
       return useScreenShareStore().getScreenShares;
     },
   },
-  // data (){
-  //   return {
-  //     StreamKey: 0
-  //   }
-  // },
-  // watch: {
-  //   // Watch for changes in the screenShare objects
-  //   screenShares: {
-  //     deep: true,
-  //     handler(newScreenShares) {
-  //       // Check for stream and update hasStream property
-  //       newScreenShares.forEach((screenShare: ScreenShare) => {
-  //         if (screenShare.hasStream) {
-  //           this.StreamKey += 1;
-  //         }
-  //       });
-  //     },
-  //   },
-  // },
+  watch: {
+    // Watch for changes in the screenShare objects
+    'screenShares': {
+      deep: true,
+      handler(newScreenShares, oldScreenShares) {
+        // Check for stream and update hasStream property
+        newScreenShares.forEach((screenShare: ScreenShare, index: number) => {
+          console.log(index);
+          if (screenShare.stream) {
+            console.log("Has stream", screenShare.stream);
+            screenShare.hasStream += 1;
+          }
+        });
+      },
+    },
+  },
   // computed: {
   //   ...mapState(usePeersStore, ['peers'])
   // },
@@ -230,22 +227,22 @@ function receivedSessionMessages(sessions: any) {
     <ul id="VideoStreamList">
     </ul>
   </div> -->
-  <div >
+  <div v-show="screenShares.length > 0 && screenShares.some(screenShare => !screenShare.websocket.initiator)">
     <h2>Video Streams</h2>
     <ul>
       <li v-for="screenShare in screenShares" :key="screenShare.getUUID()">
         <template v-if="!screenShare.websocket.initiator">
           <span> {{ screenShare.getPeer().getName() }} is screen sharing with you</span>
-          <video class="VideoStream" v-if="screenShare.stream" :srcObject="screenShare.stream" autoplay muted controls></video>
+          <video class="VideoStream" :key="`${screenShare.getUUID()}-${screenShare.hasStream}`"  :srcObject="screenShare.stream" autoplay muted controls></video>
         </template>
       </li>
     </ul>
   </div>
 
-  <!-- <div v-show="screenShares.length > 0 && screenShares.every(screenShare => !screenShare.websocket.initiator)">
+  <!-- <div v-show="screenShares.length > 0 && screenShares.some(screenShare => !screenShare.websocket.initiator)">
     <h2>Active Video Streams</h2>
     <ul class="stream-list">
-      <li v-for="screenShare in screenShares" :key="screenShare.getUUID()" class="stream-item">
+      <li v-for="screenShare in screenShares" :key="screenShare.getUUID()" class="stream-item"> 
         <template v-if="!screenShare.websocket.initiator">
           <div class="stream-info">
             <p class="stream-status" v-if="screenShare.hasStream">{{ screenShare.getPeer().getName() }} is screen sharing with you</p>
@@ -336,6 +333,6 @@ nav a:first-of-type {
 }
 
 .VideoStream{
-  width: 10%;
+  width: 30%;
 }
 </style>

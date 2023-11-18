@@ -9,7 +9,7 @@ export class ScreenShare {
     private peer: Peer;
     public websocket: any;
     public videoPlayer: any;
-    public hasStream: boolean = false;
+    public hasStream: number = 0;
     public stream: any = null;
   
     constructor(UUID:string, toPeer: Peer, websocket: any, videoPlayer: any) {
@@ -55,7 +55,8 @@ export class ScreenShare {
                 if (!this.websocket.initiator){
                     // this.videoPlayer.srcObject = stream;
                     this.stream = stream;
-                    this.hasStream = true;
+                    this.hasStream = 1;
+                    console.log("Stream found")
                     // this.videoPlayer.play();
                 }
             });
