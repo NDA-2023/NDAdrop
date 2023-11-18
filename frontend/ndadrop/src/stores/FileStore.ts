@@ -24,5 +24,6 @@ export const useFileStore = defineStore('files', {
     },
     getFiles(): Array<File> {
       return this.files as Array<File>;
-    }},
+    }
+  },
 })

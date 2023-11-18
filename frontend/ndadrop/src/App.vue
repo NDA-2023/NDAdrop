@@ -54,18 +54,7 @@ export default {
             receivedChatMessage(parsedMessage);
             break;
           default:
-            let sendingPeer = useFileStore().getFileOnUUID(parsedMessage.fileID);
-            if (!sendingPeer) {
-              console.log("Creating receiving websocket")
-              importSimplePeer(false).then((peerInstance) => {
-                let file = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
-                useFileStore().addFile(file);
-                file.websocket.signal(parsedMessage.data);
-              });
-            }
-            else {
-              sendingPeer?.websocket.signal(parsedMessage.data);
-            }
+            createReceivingWebsocket(parsedMessage);
             break;
         }
       };
@@ -95,6 +84,25 @@ export default {
       };
     }
   }
+}
+
+async function createReceivingWebsocket(parsedMessage: any) {
+  const lockName = 'websocketReceivingCriticalSection';
+  const lock = await navigator.locks.request(lockName, {mode: 'exclusive'}, async (lock) => {
+    const files = useFileStore();
+    let file = files.getFileOnUUID(parsedMessage.fileID);
+    if (!file) {
+      console.log("Creating receiving websocket")
+      importSimplePeer(false).then((peerInstance) => {
+        let file = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
+        files.addFile(file);
+        file.websocket.signal(parsedMessage.data);
+      });
+    }
+    else {
+      file?.websocket.signal(parsedMessage.data);
+    }
+  })
 }
 
 //*** AVAILABLE USERS LIST ***//
@@ -135,11 +143,11 @@ function receivedSessionMessages(sessions: any) {
   for (let i = 0; i < data.length; i++) {
     const senttime = DateTime.fromISO(data[i].senttime);
     if (currentSession == data[i].session) {
-      arraySessions[currentSessionIndex].push(new Message(new Peer('no uuid',data[i].peername), data[i].content, senttime));
+      arraySessions[currentSessionIndex].push(new Message(new Peer('no uuid', data[i].peername), data[i].content, senttime));
     } else {
       currentSession = data[i].session;
       arraySessions.push([]);
-      arraySessions[++currentSessionIndex].push(new Message(new Peer('no uuid',data[i].peername), data[i].content, senttime));
+      arraySessions[++currentSessionIndex].push(new Message(new Peer('no uuid', data[i].peername), data[i].content, senttime));
     }
   }
 
