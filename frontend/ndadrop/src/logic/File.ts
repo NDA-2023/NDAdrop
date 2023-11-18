@@ -121,7 +121,7 @@ export class File {
 
           function handleReading(done: boolean, value: Uint8Array, fileName: string) {
             if (sendingTotalSize) {
-              peer.send(JSON.stringify({totalFileSize: totalFileSize}));
+              peer.send(JSON.stringify({ totalFileSize: totalFileSize }));
               sendingTotalSize = false;
             }
             if (done) {
@@ -138,9 +138,9 @@ export class File {
             const progress = calculateProgress(sendLength);
 
             //buffer to make sure the reducing also gets accounted for
-            if (progress <= 95) 
+            if (progress <= 95)
               useFileStore().getFileOnUUID(fileuuid)!.setProgress(progress);
-            
+
             // console.log(progress);
             // console.log(sendLength)
 
@@ -188,7 +188,7 @@ export class File {
           try {
             fileSize = JSON.parse(data.toString()).totalFileSize;
             fileSizeGiven = fileSize !== undefined;
-          } catch (error) {}
+          } catch (error) { }
           if (fileSizeGiven) {
             totalFileSize = fileSize;
             return;
@@ -220,13 +220,21 @@ export class File {
 
       // Event: When the connection is closed
       this.websocket.on('close', () => {
-        console.log('Connection closed, file transfer completed.');
+        console.log('Connection closed');
         this.finalizeCompletion(this.websocket.initiator, this.UUID);
       });
 
       // Event: When an error occurs
-      this.websocket.on('error', (err: any) => {
-        console.error('ERROR', err);
+      this.websocket.on('error', (err: RTCError) => {
+        // console.error('ERROR', err);
+        if (err.errorDetail == 'sctp-failure')
+          console.log('File successfully arrived');
+        else {
+          const errorLog = 'ERROR: direct websocket failed, retry again and it will use a TURN server';
+          console.log('ERROR', errorLog);
+          useSocketStore().setError(errorLog);
+        }
+
         this.finalizeCompletion(this.websocket.initiator, this.UUID);
         this.websocket.destroy();
       });

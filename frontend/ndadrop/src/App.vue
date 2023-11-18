@@ -9,7 +9,8 @@ import { importSimplePeer } from '@/plugins/simplePeerPlugin.js';
 import { useFileStore } from './stores/FileStore';
 import { File } from './logic/File';
 import { Message } from './logic/Message';
-import { DateTime } from "luxon";
+import { DateTime } from 'luxon';
+
 
 //TODO: toaster fixen
 
@@ -18,7 +19,7 @@ import { DateTime } from "luxon";
 
 export default {
   components: {
-    TopBar: TopBar
+    TopBar: TopBar,
   },
   // computed: {
   //   ...mapState(usePeersStore, ['peers'])
@@ -154,16 +155,18 @@ function receivedSessionMessages(sessions: any) {
   chat.sessions = arraySessions;
 }
 
+
+
 </script>
 
 <template>
   <div>
     <header class="wrapper">
       <TopBar msg="NDA Drop" />
-
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/chat" class="chat">Chat</RouterLink>
+        <RouterLink to="/bluetooth">Bluetooth</RouterLink>
         <RouterLink to="/about">About</RouterLink>
       </nav>
     </header>

@@ -82,6 +82,9 @@ export default {
       this.hasFile = false;
       if (this.popover !== null)
         this.popover.hide();
+
+      this.sendingFiles = [];
+      this.fileNames = [];
     },
     sendFile() {
       const files = useFileStore();
@@ -97,9 +100,7 @@ export default {
           });
         })
       });
-      this.sendingFiles = [];
       this.cancelFile();
-      this.fileNames = [];
     }
   }
 }
