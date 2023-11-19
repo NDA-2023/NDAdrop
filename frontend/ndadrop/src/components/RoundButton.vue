@@ -1,8 +1,8 @@
 <!-- RoundButton.vue -->
 <template>
-    <button class="round-button" @click.stop="onClick" :class="{ 'active': $props.isActive }">
+    <button class="round-button" @click.stop="onClick" :class="{ [buttonClass]: $props.isActive }">
       <img v-if="IsScreenShare" src="@/assets/ScreenShareIcon.png" alt="Round Icon" class="round-icon" :class="{ 'active-icon': $props.isActive }"/>
-      <img v-if="!IsScreenShare" src="@/assets/FaceTimeIcon.png" alt="Round Icon" class="round-icon-face" :class="{ 'active-icon': $props.isActive }"/>        
+      <img v-if="!IsScreenShare" src="@/assets/FaceTimeIcon.png" alt="Round Icon" class="round-icon" :class="{ 'active-icon': $props.isActive }"/>        
     </button>
 </template>
   
@@ -22,6 +22,12 @@
           required: true,
         }
     },
+    computed: {
+    buttonClass() {
+      return this.IsScreenShare ? 'active' : 'active-blue';
+      // Adjust the class names as needed
+    },
+  },
     methods: {
       onClick() {
         this.$emit('screenshare-click');
@@ -39,12 +45,6 @@
     padding-left: 2px;
   }
 
-  .round-icon-face {
-    width: 100%; /* Make the image take up 100% of the container */
-    height: 45%; /* Make the image take up 100% of the container */
-    object-fit: cover; /* Cover the entire container while maintaining aspect ratio */
-    padding-left: 2px;
-  }
   .round-button {
     display: flex;
     justify-content: center;
@@ -69,6 +69,11 @@
     animation: pulse-purple 2s infinite alternate; /* Pulse animation */
   }
 
+  .active-blue {
+    background-color: #2927c5; /* Purple color */
+    animation: pulse-blue 2s infinite alternate; /* Pulse animation */
+  }
+
   .active-icon {
     filter: brightness(0) invert(1); /* Turn the icon white when active */
   }
@@ -79,6 +84,15 @@
     }
     to {
       background-color: #8d8cd2; /* Light purple color */
+    } 
+  }
+
+  @keyframes pulse-blue {
+    from {
+      background-color: rgb(32, 132, 195);
+    }
+    to {
+      background-color: rgb(112, 166, 199); /* Light purple color */
     } 
   }
 </style>

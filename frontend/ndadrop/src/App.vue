@@ -80,7 +80,7 @@ export default {
               importSimplePeer(false).then((peerInstance) => {
                 sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
                 if (!sendingPeer){
-                  console.log("Create receiving screenshare socket: ", parsedMessage.screenShareID);
+                  console.log("Create receiving video sharing socket: ", parsedMessage.screenShareID);
                   let peer = new ScreenShare(parsedMessage.screenShareID, usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
                   useScreenShareStore().addScreenShare(peer);
                   peer.websocket.signal(parsedMessage.data);
@@ -88,7 +88,7 @@ export default {
                   sendingPeer.websocket.signal(parsedMessage.data);
               });
             } else {
-              console.log("Screenshare socket already exists");
+              console.log("Video sharing socket already exists");
               sendingPeer.websocket.signal(parsedMessage.data);
             }
            }
