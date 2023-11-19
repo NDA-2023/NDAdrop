@@ -35,7 +35,6 @@ export default {
     this.waitForStream()
     .then(() => {
       this.streamFound = true;
-      // this.$refs.srcObject = this.screenShare.stream;
     })
     .catch((error) => {
       console.error('Error while waiting for stream:', error);
@@ -50,7 +49,7 @@ export default {
         } else {
           if (!this.screenShare)
             return;
-          setTimeout(checkStream, 100); // Adjust the interval as needed
+          setTimeout(checkStream, 100);
         }
       };
 

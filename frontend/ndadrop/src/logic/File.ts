@@ -74,7 +74,7 @@ export class File {
     
           // Event: When the connection is established
           this.websocket.on('connect', () => {
-            console.log('Connection established.');
+            console.log('File transfer connection established with ' + this.peer.getName() + '.');
             if (this.websocket.initiator){
               this.progress = 0;
               let BUFFER_THRESHOLD = 65535;
@@ -195,7 +195,7 @@ export class File {
     
           // Event: When the connection is closed
           this.websocket.on('close', () => {
-            console.log('Connection closed, file transfer completed.');
+            console.log('File transfer with ' + this.peer.getName() + ' completed, connection closed.');
             this.progress = 100;
             useFileStore().removeFileOnUUID(this.UUID);
           });

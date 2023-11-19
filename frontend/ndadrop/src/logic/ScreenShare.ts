@@ -30,7 +30,6 @@ export class ScreenShare {
     }
 
     private setupEventListeners() {
-        let dataArray: Uint8Array[] = [];
         if (this.websocket) {
             const me = usePeersStore().getMyself;
             
@@ -43,7 +42,7 @@ export class ScreenShare {
             
             // Event: When the connection is established
             this.websocket.on('connect', () => {
-                console.log('Connection established.');
+                console.log('Video connection established with ' + this.peer.getName() + '.');
                 
             });
 
@@ -51,23 +50,18 @@ export class ScreenShare {
             this.websocket.on('stream', (stream: any) => {
                 // console.log(stream);
                 if (!this.websocket.initiator){
-                    // this.videoPlayer.srcObject = stream;
                     this.stream = stream;
                     this.hasStream = true;
-                    // console.log("Stream found")
-                    // this.videoPlayer.play();
                 }
             });
         
             // Event: When the connection is closed
             this.websocket.on('close', () => {
-                console.log('Connection closed, screen share ended.');
-                // if (this.videoPlayer && this.videoPlayer.parentNode) {
-                //     // Remove the video element from its parent
-                //     this.videoPlayer.parentNode.removeChild(this.videoPlayer);
-                // }
+                console.log('Video share ended with ' + this.peer.getName() + ', connection closed.');
+                this.websocket.stream = null;
+                if (this.stream)
+                    this.stream.getTracks().forEach((track: any) => track.stop());
                 useScreenShareStore().removeScreenShareOnUUID(this.UID);
-                // this.websocket.destroy();
             });
         
             // Event: When an error occurs

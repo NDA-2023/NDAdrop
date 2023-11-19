@@ -25,7 +25,6 @@
     computed: {
     buttonClass() {
       return this.IsScreenShare ? 'active' : 'active-blue';
-      // Adjust the class names as needed
     },
   },
     methods: {

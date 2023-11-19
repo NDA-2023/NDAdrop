@@ -23,10 +23,7 @@ export const useScreenShareStore = defineStore('screens', {
     return this.screens.find((screen) => screen.getUUID() === screenShareUID);
   }, 
 },
-  getters: {
-    // getScreenShareOnUUID: (state) => {
-    //     return (screenShareUID: string) => state.screens.find((screen) => screen.getUUID() === screenShareUID);
-    // },   
+  getters: { 
     getScreenShareOnPeer: (state) => {
         return (screenSharePeer: Peer) => state.screens.find((screen) => screen.getPeer() === screenSharePeer && screen.websocket.initiator);
     } ,
@@ -34,7 +31,6 @@ export const useScreenShareStore = defineStore('screens', {
         return state.screens;
     } ,
     getScreenShareIDs: (state) => {
-      // Assuming each screen share object has a 'getUUID' method
       return state.screens.map((screen) => screen.getUUID());
     },
 }

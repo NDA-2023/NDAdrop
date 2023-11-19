@@ -62,7 +62,7 @@ export default {
                 importSimplePeer(false).then((peerInstance) => {
                   sendingPeer = useFileStore().getFileOnUUID(parsedMessage.fileID);
                   if (!sendingPeer){
-                    console.log("Creating file receiving websocket")
+                    // console.log("Creating file receiving websocket")
                     let peer = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
                     useFileStore().addFile(peer);
                     peer.websocket.signal(parsedMessage.data);
@@ -75,12 +75,11 @@ export default {
               }
            } else {
             let sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
-            // console.log(useScreenShareStore().screens);
             if (!sendingPeer) {
               importSimplePeer(false).then((peerInstance) => {
                 sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
                 if (!sendingPeer){
-                  console.log("Create receiving video sharing socket: ", parsedMessage.screenShareID);
+                  // console.log("Create receiving video sharing socket: ", parsedMessage.screenShareID);
                   let peer = new ScreenShare(parsedMessage.screenShareID, usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
                   useScreenShareStore().addScreenShare(peer);
                   peer.websocket.signal(parsedMessage.data);
@@ -88,7 +87,7 @@ export default {
                   sendingPeer.websocket.signal(parsedMessage.data);
               });
             } else {
-              console.log("Video sharing socket already exists");
+              // console.log("Video sharing socket already exists");
               sendingPeer.websocket.signal(parsedMessage.data);
             }
            }
@@ -194,14 +193,12 @@ function receivedSessionMessages(sessions: any) {
   </RouterView>
 
   <br/>
-  <!-- <div v-show="screenShares.length > 0 && screenShares.some(screenShare => !screenShare.websocket.initiator)"> -->
-    <h3>Active Video Streams:</h3>
-    <ul>
-      <li v-for="screenShare in screenShares" :key="`${screenShare}-${Date.now()}`">
-          <VideoStream :screenshareID="screenShare"> </VideoStream>
-      </li>
-    </ul>
-  <!-- </div> -->
+  <h3>Active Video Streams:</h3>
+  <ul>
+    <li v-for="screenShare in screenShares" :key="`${screenShare}-${Date.now()}`">
+        <VideoStream :screenshareID="screenShare"> </VideoStream>
+    </li>
+  </ul>
 
 </template>
 
@@ -280,9 +277,5 @@ nav a:first-of-type {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
-
-.VideoStream{
-  width: 30%;
 }
 </style>
