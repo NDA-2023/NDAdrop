@@ -2,6 +2,7 @@
 import { File } from '@/logic/File';
 import { useFileStore } from '@/stores/FileStore';
 import { Toast } from 'bootstrap';
+import Preview from './Preview.vue';
 
 export default {
     props: {
@@ -13,6 +14,9 @@ export default {
             type: Boolean,
             required: false
         }
+    },
+    components: {
+        Preview: Preview,
     },
     created() {
         this.startRefreshing();
@@ -55,6 +59,9 @@ export default {
         },
         remove() {
             useFileStore().removeFileOnUUID(this.sendingFile.getUID());
+        },
+        preview() {
+            useFileStore().previewUUID = this.sendingFile.getUID();
         }
     },
 }
@@ -81,9 +88,13 @@ export default {
             <div v-if="!sendingFile.websocket.initiator" class="d-flex m-2 justify-content-around">
                 <button type="button" class="btn btn-danger" @click="sendingFile.decline()">Decline</button>
                 <button type="button" class="btn green" @click="sendingFile.accept()">Accept</button>
-                <button type="button" class="btn btn-info" @click="">Preview</button>
+                <!-- <button v-if="isComplete" type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#preview" @click="preview()">Preview</button> -->
             </div>
         </div>
+    </div>
+
+    <div v-if="isComplete" >
+        <Preview />
     </div>
 
     <!-- <div ref="downloadToast" class="toast m-1" style="z-index: 11" role="alert" aria-live="assertive" aria-atomic="true"

@@ -49,6 +49,10 @@ export class File {
     return this.progress
   }
 
+  public getBlob(): Blob | null {
+    return this.blob;
+  }
+
   public setProgress(progress: number) {
     this.progress = progress;
   }

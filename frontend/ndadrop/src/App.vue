@@ -1,6 +1,6 @@
 <script lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import TopBar from './components/TopBar.vue'
+import { RouterLink, RouterView } from 'vue-router';
+import TopBar from '@/components/TopBar.vue';
 import { usePeersStore } from './stores/PeersStore';
 import { useChatStore } from './stores/ChatStore';
 import { useSocketStore } from './stores/SocketStore';
@@ -211,7 +211,7 @@ nav a {
   border-left: 1px solid var(--color-border);
   text-decoration: none;
   color: black;
-  font-size: 1.5rem;
+  font-size: 1rem;
 }
 
 nav a:first-of-type {
@@ -239,6 +239,10 @@ nav a:first-of-type {
 
     padding: 1rem 0;
     margin-top: 1rem;
+  }
+
+  nav a {
+    font-size: 1.5rem;
   }
 
   .chat {
