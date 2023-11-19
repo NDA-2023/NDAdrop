@@ -64,13 +64,13 @@
   }
 
   .active {
-    background-color: #6260d3; /* Purple color */
-    animation: pulse-purple 2s infinite alternate; /* Pulse animation */
+    background-color: #abaae3; /* Purple color */
+    animation: pulse-purple 0.4s infinite alternate; /* Pulse animation */
   }
 
   .active-blue {
     background-color: #2927c5; /* Purple color */
-    animation: pulse-blue 2s infinite alternate; /* Pulse animation */
+    animation: pulse-blue 0.4s infinite alternate; /* Pulse animation */
   }
 
   .active-icon {
@@ -82,7 +82,7 @@
       background-color: #6260d3;
     }
     to {
-      background-color: #8d8cd2; /* Light purple color */
+      background-color: #abaae3; /* Light purple color */
     } 
   }
 
