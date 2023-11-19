@@ -14,6 +14,7 @@ import { useChatStore } from '@/stores/ChatStore';
 import IconLock from './icons/IconLock.vue';
 import IconQR from './icons/IconQR.vue';
 import IconRoom from './icons/IconRoom.vue';
+import IconToRoom from './icons/IconArrowRight.vue';
 
 export default {
   components: {
@@ -23,6 +24,7 @@ export default {
     IconQR: IconQR,
     IconRoom: IconRoom,
     QR: QR,
+    IconToRoom: IconToRoom
   },
   // data() {
   //     return {
@@ -156,10 +158,17 @@ export default {
         </div>
         <div class="mb-1 mt-1">
           <input type="password" class="form-control green roomControlText" id="roomPassword"
-            placeholder="Room's Password" v-model="password">
+            placeholder="Password" v-model="password">
         </div>
-        <div class="mb-1 mt-1">
-          <button class="btn green" @click="createRoom()">Create Room</button>
+        <div class="mb-1 mt-1 ms-1">
+          <button class="btn green" style="color: white" @click="createRoom()">
+            <div class="d-flex">
+              <div class="createRoomText">
+                To Room 
+              </div>
+              <IconToRoom style="margin: 4px" />
+            </div>
+          </button>
         </div>
       </div>
     </div>
@@ -301,6 +310,10 @@ export default {
   display: none;
 }
 
+.createRoomText {
+  display: none;
+}
+
 @media (min-width: 1024px) {
   .toast-container {
     padding-bottom: 0;
@@ -312,6 +325,10 @@ export default {
 
   .controls {
     display: none;
+  }
+
+  .createRoomText {
+    display: block;
   }
 }
 
