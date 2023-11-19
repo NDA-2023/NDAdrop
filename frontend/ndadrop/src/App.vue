@@ -111,6 +111,11 @@ function createReceivingWebsocketForVideoStream(parsedMessage: any) {
         let peer = new ScreenShare(parsedMessage.screenShareID, usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
         useScreenShareStore().addScreenShare(peer);
         peer.websocket.signal(parsedMessage.data);
+
+        try {
+          let audio = new Audio('../src/assets/stream.mp3');
+          audio.play();
+        } catch (err) { }
       }
       else
         sendingPeer.websocket.signal(parsedMessage.data);
@@ -154,6 +159,10 @@ function updateOnlineUsersList(onlineUsers: any) {
     foundUsers.push(user[0]);
     if (!foundUser) {
       peersStore.addNewPeer(user[0], user[1], false, false);
+      try {
+        let audio = new Audio('../src/assets/join.mp3');
+        audio.play();
+      } catch (err) { }
     } else {
       if (user[1] != foundUser.getName()) { // Change username
         foundUser.setName(user[1]);
@@ -171,6 +180,10 @@ function updateOnlineUsersList(onlineUsers: any) {
 }
 
 function receivedChatMessage(message: any) {
+  try {
+    let audio = new Audio('../src/assets/message.mp3');
+    audio.play();
+  } catch (err) { }
   const peers = usePeersStore();
   const chat = useChatStore();
   chat.addMessage(peers.getPeerViaUID(message.uuid) as Peer, message.content);

@@ -40,9 +40,15 @@ export default {
   },
   methods: {
     sendMessage() {
+      try {
+        let audio = new Audio('../src/assets/message.mp3');
+        audio.play();
+      } catch (err) {}
+
       const peers = usePeersStore();
       const chat = useChatStore();
       const message = chat.addMessage(peers.getMyself as Peer, this.typedMessage);
+
 
       const socket: any = useSocketStore().socket;
       socket.send(
