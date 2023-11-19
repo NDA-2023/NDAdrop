@@ -19,10 +19,10 @@ export default {
   components: {
     PeerList: PeerList,
     FileUploadToast: FileUploadToast,
-    QR: QR,
     IconLock: IconLock,
     IconQR: IconQR,
     IconRoom: IconRoom,
+    QR: QR,
   },
   // data() {
   //     return {
@@ -174,6 +174,7 @@ export default {
     </button>
   </div>
 
+  
   <!-- Peerlist -->
   <div class="file-transfer container">
     <!-- <h4>Peer List</h4> -->

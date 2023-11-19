@@ -1,13 +1,14 @@
 // ScreenShareComponent.vue
 <template>
-  <div v-if="!screenShare.websocket.initiator">
-    <p>{{ screenShare.getPeer().getName() }} is sharing video with you</p>
-    <div v-if="streamFound">
-      <video class="VideoStream" ref="videoElement" :key="`${screenShare.getUUID()}-${Date.now()}`" :srcObject="screenShare.stream" autoplay muted controls></video>
+  <div class="videostream green" v-if="!screenShare.websocket.initiator">
+    <div v-if="streamFound" class="">
+      <video class="video" ref="videoElement" :key="`${screenShare.getUUID()}-${Date.now()}`" :srcObject="screenShare.stream" autoplay muted controls></video>
     </div>
+    <div class="peerName">{{ screenShare.getPeer().getName() }}</div>
     <div v-if="!streamFound">
       <span>Stream is loading...</span>
     </div>
+    <!-- <div>{{ screenShare.getPeer().getName() }}</div> -->
   </div>
 </template>
 
@@ -61,7 +62,25 @@ export default {
 </script>
 
 <style scoped>
-.VideoStream{
-  width: 30%;
+
+.videostream {
+  margin: 1rem;
+
+}
+.video{
+  width: 200px;
+  border-radius: 15px;
+}
+
+.peerName {
+  text-align: center;
+}
+
+.green {
+  background-color: hsla(160, 100%, 37%, 1);
+  color: white;
+  border: none;
+  padding: 0.2rem 0.2rem 0rem 0.2rem;
+  border-radius: 15px;
 }
 </style>

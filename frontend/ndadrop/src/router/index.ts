@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '@/views/HomeView.vue';
 import ChatView from '@/views/ChatView.vue';
+import StreamView from '@/views/StreamView.vue';
 import BluetoothView from '@/views/BluetoothView.vue';
 
 const router = createRouter({
@@ -19,6 +20,11 @@ const router = createRouter({
       path: '/chat',
       name: 'chat',
       component: ChatView,
+    },
+    {
+      path: '/streams',
+      name: 'streams',
+      component: StreamView,
     },
     {
       path: '/bluetooth',

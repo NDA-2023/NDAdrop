@@ -10,19 +10,12 @@ import { useFileStore } from './stores/FileStore';
 import { File } from './logic/File';
 import { Message } from './logic/Message';
 import { DateTime } from "luxon";
-import { useScreenShareStore } from './stores/ScreenShareStore';
 import { ScreenShare } from './logic/ScreenShare';
-import VideoStream from '@/components/VideoStream.vue';
+import { useScreenShareStore } from './stores/ScreenShareStore';
 
 export default {
   components: {
     TopBar: TopBar,
-    VideoStream
-  },
-  computed: {
-    screenShares() {
-      return useScreenShareStore().getScreenShareIDs;
-    },
   },
   // computed: {
   //   ...mapState(usePeersStore, ['peers'])
@@ -204,6 +197,7 @@ function receivedRoomStatus(roomActive: boolean) {
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/chat" class="chat">Chat</RouterLink>
+        <RouterLink to="/streams" class="streams">Streams</RouterLink>
         <RouterLink to="/bluetooth">Bluetooth</RouterLink>
         <RouterLink to="/about">About</RouterLink>
       </nav>
@@ -215,14 +209,6 @@ function receivedRoomStatus(roomActive: boolean) {
       <component :is="Component" :key="$route.path"></component>
     </Transition>
   </RouterView>
-
-  <br />
-  <h3>Active Video Streams:</h3>
-  <ul>
-    <li v-for="screenShare in screenShares" :key="`${screenShare}-${Date.now()}`">
-      <VideoStream :screenshareID="screenShare"> </VideoStream>
-    </li>
-  </ul>
 </template>
 
 <style scoped>
@@ -292,6 +278,10 @@ nav a:first-of-type {
   }
 
   .chat {
+    display: none;
+  }
+
+  .streams {
     display: none;
   }
 }

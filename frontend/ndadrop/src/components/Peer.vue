@@ -7,6 +7,7 @@ import RoundButton from './RoundButton.vue';
 import { importSimplePeer } from '@/plugins/simplePeerPlugin';
 import { ScreenShare } from '@/logic/ScreenShare';
 import { useScreenShareStore } from '@/stores/ScreenShareStore';
+import VideoStream from './VideoStream.vue';
 
 export default {
     props: {
@@ -24,6 +25,8 @@ export default {
             screenStream: null as MediaStream | null
 
         };
+    },
+    computed: {
     },
     methods: {
         ft(timestamp: DateTime) {
@@ -97,12 +100,15 @@ export default {
             }
         },
     },
-    components: { RoundButton }
+    components: {
+        RoundButton: RoundButton,
+        VideoStream: VideoStream,
+    }
 }
 </script>
 
 <template>
-    <Transition name="fade">
+    <Transition name="fade" mode="in-out">
         <!-- For when it is you that is shown -->
         <div v-if="peer.isMe()">
             <div class="list-group-item list-group-item-action lg blue">
