@@ -54,7 +54,7 @@ export class ScreenShare {
                     // this.videoPlayer.srcObject = stream;
                     this.stream = stream;
                     this.hasStream = true;
-                    console.log("Stream found")
+                    // console.log("Stream found")
                     // this.videoPlayer.play();
                 }
             });

@@ -21,7 +21,7 @@ export default {
   },
   computed: {
     screenShares() {
-      return useScreenShareStore().getScreenShares;
+      return useScreenShareStore().getScreenShareIDs;
     },
   },
   // computed: {
@@ -194,14 +194,14 @@ function receivedSessionMessages(sessions: any) {
   </RouterView>
 
   <br/>
-  <div v-show="screenShares.length > 0 && screenShares.some(screenShare => !screenShare.websocket.initiator)">
+  <!-- <div v-show="screenShares.length > 0 && screenShares.some(screenShare => !screenShare.websocket.initiator)"> -->
     <h3>Active Video Streams:</h3>
     <ul>
-      <li v-for="screenShare in screenShares" :key="`${screenShare.getUUID()}-${Date.now()}`">
-        <VideoStream :screenshare="(screenShare as ScreenShare)"> </VideoStream>
+      <li v-for="screenShare in screenShares" :key="`${screenShare}-${Date.now()}`">
+          <VideoStream :screenshareID="screenShare"> </VideoStream>
       </li>
     </ul>
-  </div>
+  <!-- </div> -->
 
 </template>
 

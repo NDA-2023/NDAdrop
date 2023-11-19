@@ -1,42 +1,68 @@
 // ScreenShareComponent.vue
 <template>
-  <div>
-    <p>{{ screenshare.getPeer().getName() }} is sharing video with you</p>
-    <video class="VideoStream" ref="videoElement" :key="`${screenshare.getUUID()}-${Date.now()}`" :srcObject="screenshare.stream" autoplay muted controls></video>
+  <div v-if="!screenShare.websocket.initiator">
+    <p>{{ screenShare.getPeer().getName() }} is sharing video with you</p>
+    <div v-if="streamFound">
+      <video class="VideoStream" ref="videoElement" :key="`${screenShare.getUUID()}-${Date.now()}`" :srcObject="screenShare.stream" autoplay muted controls></video>
+    </div>
+    <div v-if="!streamFound">
+      <span>Stream is loading...</span>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { ScreenShare } from '@/logic/ScreenShare';
+import { useScreenShareStore } from '@/stores/ScreenShareStore';
 
 export default {
   props: {
-    screenshare: {
-      type: ScreenShare,
+    screenshareID: {
+      type: String,
       required: true,
     },
   },
-  watch: {
-    'screenshare.stream'(newStream, oldStream) {
-      // When the screenShare stream changes, update the video srcObject
-      console.log("Test")
-      this.updateVideoStream(newStream);
+  computed: {
+    screenShare() {
+      return useScreenShareStore().getScreenShareOnUUID(this.screenshareID)!;
     },
   },
+  data() {
+        return {
+            streamFound: false
+        };
+      },
   mounted() {
-    // Initialize the video stream when the component is mounted
-    this.updateVideoStream(this.screenshare.stream);
+    this.waitForStream()
+    .then(() => {
+      this.streamFound = true;
+      // this.$refs.srcObject = this.screenShare.stream;
+    })
+    .catch((error) => {
+      console.error('Error while waiting for stream:', error);
+    });
   },
   methods: {
-    updateVideoStream(stream: MediaStream) {
-      const videoElement = this.$refs.videoElement;
+    waitForStream() {
+    return new Promise<void>((resolve) => {
+      const checkStream = () => {
+        if (this.screenShare && this.screenShare.stream) {
+          resolve();
+        } else {
+          if (!this.screenShare)
+            return;
+          setTimeout(checkStream, 100); // Adjust the interval as needed
+        }
+      };
 
-      // Check if the video element and stream are available
-      if (videoElement && stream) {
-        // Assign the stream to the video element
-        (videoElement as HTMLVideoElement).srcObject = stream;
-      }
-    },
+      checkStream();
+    });
   },
+  }
 };
 </script>
+
+<style scoped>
+.VideoStream{
+  width: 30%;
+}
+</style>

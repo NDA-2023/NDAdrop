@@ -21,7 +21,7 @@ export const useScreenShareStore = defineStore('screens', {
   },
   getScreenShareOnUUID(screenShareUID: string){
     return this.screens.find((screen) => screen.getUUID() === screenShareUID);
-    }, 
+  }, 
 },
   getters: {
     // getScreenShareOnUUID: (state) => {
@@ -32,6 +32,10 @@ export const useScreenShareStore = defineStore('screens', {
     } ,
     getScreenShares: (state) => {
         return state.screens;
-    } 
+    } ,
+    getScreenShareIDs: (state) => {
+      // Assuming each screen share object has a 'getUUID' method
+      return state.screens.map((screen) => screen.getUUID());
+    },
 }
 })
