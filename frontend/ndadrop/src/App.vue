@@ -32,7 +32,7 @@ export default {
     const peers = usePeersStore();
     const randomIndex = Math.floor(Math.random() * randomNames.length);
     peers.addNewPeer('', randomNames[randomIndex], false, true);
-    console.log("My UUID: ", peers.getMyself.getUID());
+    // console.log("My UUID: ", peers.getMyself.getUID());
   },
   mounted() {
     this.setupWebsocketServer();
@@ -40,7 +40,7 @@ export default {
   },
   methods: {
     setupWebsocketServer() {
-      const ws = new WebSocket("ws://localhost:3001");//'wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws');
+      const ws = new WebSocket("wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws");
       useSocketStore().setSocket(ws);
       ws.onopen = () => {
         console.log('Connected to Signaling server');
@@ -79,7 +79,6 @@ export default {
               importSimplePeer(false).then((peerInstance) => {
                 sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
                 if (!sendingPeer){
-                  // console.log("Create receiving video sharing socket: ", parsedMessage.screenShareID);
                   let peer = new ScreenShare(parsedMessage.screenShareID, usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
                   useScreenShareStore().addScreenShare(peer);
                   peer.websocket.signal(parsedMessage.data);
@@ -87,7 +86,6 @@ export default {
                   sendingPeer.websocket.signal(parsedMessage.data);
               });
             } else {
-              // console.log("Video sharing socket already exists");
               sendingPeer.websocket.signal(parsedMessage.data);
             }
            }
