@@ -4,7 +4,8 @@ import { Peer } from '../logic/Peer'
 
 export const usePeersStore = defineStore('peers', {
   state: () => ({
-    peers: [] as Array<Peer>
+    peers: [] as Array<Peer>,
+    roomActive: false,
   }),
   getters: {
     getPeerViaIndex: (state) => {

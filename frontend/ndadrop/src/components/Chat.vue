@@ -1,18 +1,22 @@
 <script lang="ts">
 import MessageVue from './Message.vue';
-import { mapState } from 'pinia'
 import { usePeersStore } from '@/stores/PeersStore'
 import { useChatStore } from '@/stores/ChatStore';
 import { useSocketStore } from '@/stores/SocketStore';
 import { Peer } from '@/logic/Peer';
 import type { Message as MessageType } from '@/logic/Message';
+import IconQR from './icons/IconQR.vue';
 import IconHistory from './icons/IconHistory.vue';
-import { DateTime } from 'luxon';
+import IconRoom from './icons/IconRoom.vue';
+import QR from './QR.vue';
 
 export default {
   components: {
     IconHistory: IconHistory,
+    IconQR: IconQR,
+    IconRoom: IconRoom,
     MessageVue: MessageVue,
+    QR
   },
   computed: {
     computedMessages() {
@@ -28,6 +32,7 @@ export default {
     return {
       typedMessage: "" as string,
       showingHistory: false,
+      showingQR: false,
       data: null,
     }
   },
@@ -50,19 +55,29 @@ export default {
         })
       );
 
-      const persistent: any = useSocketStore().persistent;
-      persistent.send(
-        JSON.stringify({
-          type: 'add-message',
-          peername: peers.getMyself.getName(),
-          content: this.typedMessage,
-          senttime: message.getTimestamp(),
-          session: peers.getMyself.getUID(),
-        })
-      )
+      if (!peers.roomActive) {
+        const persistent: any = useSocketStore().persistent;
+        persistent.send(
+          JSON.stringify({
+            type: 'add-message',
+            peername: peers.getMyself.getName(),
+            content: this.typedMessage,
+            senttime: message.getTimestamp(),
+            session: peers.getMyself.getUID(),
+          })
+        )
+      }
       // reset message
       this.typedMessage = "";
     },
+    toggleQR() {
+      const chats = useChatStore()
+      chats.showingQR = !chats.showingQR;
+    },
+    toggleRoom() {
+      const chats = useChatStore()
+      chats.showingRoom = !chats.showingRoom;
+    }
   }
 }
 </script>
@@ -71,11 +86,18 @@ export default {
   <div class="list-group">
     <div class="chat-background overflow-scroll">
       <div class="d-flex justify-content-end">
+        <button class="btn" @click="toggleRoom()">
+          <IconRoom />
+        </button>
+        <button class="btn" @click="toggleQR()">
+          <IconQR />
+        </button>
         <button class="btn" @click="() => { showingHistory = !showingHistory }">
           <IconHistory />
         </button>
       </div>
       <div v-if="!showingHistory">
+        
         <div v-for="message in computedMessages">
           <MessageVue :message=message />
         </div>
@@ -90,8 +112,7 @@ export default {
                   Session {{ index }}
                 </button>
               </h2>
-              <div :id="'collapse' + index" class="accordion-collapse collapse"
-                data-bs-parent="#messagesHistory">
+              <div :id="'collapse' + index" class="accordion-collapse collapse" data-bs-parent="#messagesHistory">
                 <div class="accordion-body">
                   <div v-for="message in session">
                     <MessageVue :message=message />
@@ -151,5 +172,15 @@ export default {
 
 .session-background {
   background-color: transparent;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

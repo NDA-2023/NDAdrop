@@ -1,6 +1,6 @@
 <script lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import TopBar from './components/TopBar.vue'
+import { RouterLink, RouterView } from 'vue-router';
+import TopBar from '@/components/TopBar.vue';
 import { usePeersStore } from './stores/PeersStore';
 import { useChatStore } from './stores/ChatStore';
 import { useSocketStore } from './stores/SocketStore';
@@ -12,7 +12,7 @@ import { Message } from './logic/Message';
 import { DateTime } from "luxon";
 import { useScreenShareStore } from './stores/ScreenShareStore';
 import { ScreenShare } from './logic/ScreenShare';
-import VideoStream from '@/components/VideoStream.vue'
+import VideoStream from '@/components/VideoStream.vue';
 
 export default {
   components: {
@@ -55,41 +55,16 @@ export default {
           case "chat-message":
             receivedChatMessage(parsedMessage);
             break;
+          case "room-status":
+            receivedRoomStatus(parsedMessage.roomActive);
+            break;
           default:
-            if (!parsedMessage.screenShareID){
-              let sendingPeer = useFileStore().getFileOnUUID(parsedMessage.fileID);
-              if (!sendingPeer) {
-                importSimplePeer(false).then((peerInstance) => {
-                  sendingPeer = useFileStore().getFileOnUUID(parsedMessage.fileID);
-                  if (!sendingPeer){
-                    // console.log("Creating file receiving websocket")
-                    let peer = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
-                    useFileStore().addFile(peer);
-                    peer.websocket.signal(parsedMessage.data);
-                  } else
-                    sendingPeer.websocket.signal(parsedMessage.data);
-                });
-              }
-              else {
-                sendingPeer?.websocket.signal(parsedMessage.data);
-              }
-           } else {
-            let sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
-            if (!sendingPeer) {
-              importSimplePeer(false).then((peerInstance) => {
-                sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
-                if (!sendingPeer){
-                  let peer = new ScreenShare(parsedMessage.screenShareID, usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
-                  useScreenShareStore().addScreenShare(peer);
-                  peer.websocket.signal(parsedMessage.data);
-                } else
-                  sendingPeer.websocket.signal(parsedMessage.data);
-              });
+            if (!parsedMessage.screenShareID) {
+              createReceivingWebsocketForFile(parsedMessage);
             } else {
-              sendingPeer.websocket.signal(parsedMessage.data);
+              createReceivingWebsocketForVideoStream(parsedMessage);
             }
-           }
-          break;
+            break;
         }
       };
       ws.onerror = (message) => {
@@ -120,6 +95,48 @@ export default {
   }
 }
 
+function createReceivingWebsocketForVideoStream(parsedMessage: any) {
+  let sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
+  if (!sendingPeer) {
+    importSimplePeer(false).then((peerInstance) => {
+      sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
+      if (!sendingPeer) {
+        let peer = new ScreenShare(parsedMessage.screenShareID, usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
+        useScreenShareStore().addScreenShare(peer);
+        peer.websocket.signal(parsedMessage.data);
+      }
+      else
+        sendingPeer.websocket.signal(parsedMessage.data);
+    });
+  } else {
+    sendingPeer.websocket.signal(parsedMessage.data);
+  }
+}
+
+async function createReceivingWebsocketForFile(parsedMessage: any) {
+  const lockName = 'websocketReceivingCriticalSection';
+  const lock = await navigator.locks.request(lockName, { mode: 'exclusive' }, async (lock) => {
+    const files = useFileStore();
+    let file = files.getFileOnUUID(parsedMessage.fileID);
+    if (!file) {
+      console.log("Creating receiving websocket")
+      importSimplePeer(false).then((peerInstance) => {
+        file = files.getFileOnUUID(parsedMessage.fileID);
+        if (!file) {
+          let peer = new File(parsedMessage.fileID, null, parsedMessage.fileName ? parsedMessage.fileName : '', usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
+          files.addFile(peer);
+          peer.websocket.signal(parsedMessage.data);
+        } else {
+          file.websocket.signal(parsedMessage.data);
+        }
+      });
+    }
+    else {
+      file?.websocket.signal(parsedMessage.data);
+    }
+  })
+}
+
 //*** AVAILABLE USERS LIST ***//
 function updateOnlineUsersList(onlineUsers: any) {
   // console.log("Updating users")
@@ -136,11 +153,14 @@ function updateOnlineUsersList(onlineUsers: any) {
       }
     }
   });
-  peersStore.peers.forEach(peer => {
+
+  //
+  for (let i = peersStore.peers.length - 1; i >= 0; i--) {
+    const peer = peersStore.peers[i];
     if (!foundUsers.includes(peer.getUID())) {
       peersStore.removePeer(peer as Peer);
     }
-  });
+  }
 }
 
 function receivedChatMessage(message: any) {
@@ -158,16 +178,22 @@ function receivedSessionMessages(sessions: any) {
   for (let i = 0; i < data.length; i++) {
     const senttime = DateTime.fromISO(data[i].senttime);
     if (currentSession == data[i].session) {
-      arraySessions[currentSessionIndex].push(new Message(new Peer('no uuid',data[i].peername), data[i].content, senttime));
+      arraySessions[currentSessionIndex].push(new Message(new Peer('no uuid', data[i].peername), data[i].content, senttime));
     } else {
       currentSession = data[i].session;
       arraySessions.push([]);
-      arraySessions[++currentSessionIndex].push(new Message(new Peer('no uuid',data[i].peername), data[i].content, senttime));
+      arraySessions[++currentSessionIndex].push(new Message(new Peer('no uuid', data[i].peername), data[i].content, senttime));
     }
   }
 
   chat.sessions = arraySessions;
 }
+
+function receivedRoomStatus(roomActive: boolean) {
+  usePeersStore().roomActive = roomActive;
+}
+
+
 
 </script>
 
@@ -175,10 +201,10 @@ function receivedSessionMessages(sessions: any) {
   <div>
     <header class="wrapper">
       <TopBar msg="NDA Drop" />
-
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/chat" class="chat">Chat</RouterLink>
+        <RouterLink to="/bluetooth">Bluetooth</RouterLink>
         <RouterLink to="/about">About</RouterLink>
       </nav>
     </header>
@@ -190,14 +216,13 @@ function receivedSessionMessages(sessions: any) {
     </Transition>
   </RouterView>
 
-  <br/>
+  <br />
   <h3>Active Video Streams:</h3>
   <ul>
     <li v-for="screenShare in screenShares" :key="`${screenShare}-${Date.now()}`">
-        <VideoStream :screenshareID="screenShare"> </VideoStream>
+      <VideoStream :screenshareID="screenShare"> </VideoStream>
     </li>
   </ul>
-
 </template>
 
 <style scoped>
@@ -215,7 +240,7 @@ nav {
   width: 100%;
   font-size: 12px;
   text-align: center;
-  margin-top: 2rem;
+  /* margin-top: 2rem; */
 }
 
 nav a.router-link-exact-active {
@@ -232,7 +257,7 @@ nav a {
   border-left: 1px solid var(--color-border);
   text-decoration: none;
   color: black;
-  font-size: 1.5rem;
+  font-size: 1rem;
 }
 
 nav a:first-of-type {
@@ -260,6 +285,10 @@ nav a:first-of-type {
 
     padding: 1rem 0;
     margin-top: 1rem;
+  }
+
+  nav a {
+    font-size: 1.5rem;
   }
 
   .chat {

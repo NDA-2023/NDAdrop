@@ -24,7 +24,7 @@ export default {
 </script>
 
 <template>
-    <div class="list-group">
+    <div class="list-group lg">
         <div v-for="peer in computedPeers">
             <PeerVue :peer=peer />
         </div>
@@ -33,7 +33,7 @@ export default {
 
 <style scoped>
 .lg {
-    border-radius: 15px;
+    padding: 0 12px 0 12px;
 }
 
 .green {

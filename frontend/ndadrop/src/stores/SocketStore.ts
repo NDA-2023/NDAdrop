@@ -5,6 +5,7 @@ export const useSocketStore = defineStore({
   state: () => ({
     socket: null,
     persistent: null,
+    err: null,
   }),
   actions: {
     setSocket(socket: any) {
@@ -13,5 +14,8 @@ export const useSocketStore = defineStore({
     setPersistent(persistent: any) {
       this.persistent = persistent
     },
+    setError(err: any) {
+      this.err = err;
+    }
   },
 });
