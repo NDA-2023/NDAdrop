@@ -91,7 +91,7 @@ export default {
 
 async function createReceivingWebsocket(parsedMessage: any) {
   const lockName = 'websocketReceivingCriticalSection';
-  const lock = await navigator.locks.request(lockName, {mode: 'exclusive'}, async (lock) => {
+  const lock = await navigator.locks.request(lockName, { mode: 'exclusive' }, async (lock) => {
     const files = useFileStore();
     let file = files.getFileOnUUID(parsedMessage.fileID);
     if (!file) {
@@ -124,11 +124,14 @@ function updateOnlineUsersList(onlineUsers: any) {
       }
     }
   });
-  peersStore.peers.forEach(peer => {
+
+  //
+  for (let i = peersStore.peers.length - 1; i >= 0; i--) {
+    const peer = peersStore.peers[i];
     if (!foundUsers.includes(peer.getUID())) {
       peersStore.removePeer(peer as Peer);
     }
-  });
+  }
 }
 
 function receivedChatMessage(message: any) {

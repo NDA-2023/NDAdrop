@@ -55,16 +55,18 @@ export default {
         })
       );
 
-      const persistent: any = useSocketStore().persistent;
-      persistent.send(
-        JSON.stringify({
-          type: 'add-message',
-          peername: peers.getMyself.getName(),
-          content: this.typedMessage,
-          senttime: message.getTimestamp(),
-          session: peers.getMyself.getUID(),
-        })
-      )
+      if (!peers.roomActive) {
+        const persistent: any = useSocketStore().persistent;
+        persistent.send(
+          JSON.stringify({
+            type: 'add-message',
+            peername: peers.getMyself.getName(),
+            content: this.typedMessage,
+            senttime: message.getTimestamp(),
+            session: peers.getMyself.getUID(),
+          })
+        )
+      }
       // reset message
       this.typedMessage = "";
     },

@@ -132,11 +132,9 @@ export default {
     },
     createRoom() {
         const peers = usePeersStore();
-        peers.room.name = this.room;
-        peers.room.password = this.password;
         const socket: any = useSocketStore().socket;
         if(socket)
-            socket.send(JSON.stringify({ type: 'change-room', room: peers.room.name, password: peers.room.password}));
+            socket.send(JSON.stringify({ type: 'change-room', uuid: peers.getMyself.getUID(), room: this.room, password: this.password}));
     },
   }
 }
@@ -154,11 +152,11 @@ export default {
       <div class="d-flex justify-content-center">
         <div class="mb-1 me-1 mt-1">
           <input type="email" class="form-control green roomControlText" id="roomName" aria-describedby="roomName"
-            placeholder="Room Name">
+            placeholder="Room Name" v-model="room">
         </div>
         <div class="mb-1 mt-1">
           <input type="password" class="form-control green roomControlText" id="roomPassword"
-            placeholder="Room's Password">
+            placeholder="Room's Password" v-model="password">
         </div>
         <div class="mb-1 mt-1">
           <button class="btn green" @click="createRoom()">Create Room</button>
