@@ -38,6 +38,8 @@ export default {
       ws.onopen = () => {
         console.log('Connected to Signaling server');
         ws.send(JSON.stringify({ type: 'join', uuid: usePeersStore().getMyself.getUID(), username: usePeersStore().getMyself.getName() }));
+
+        this.routeToRoom();
       };
       ws.onmessage = (message) => {
         let parsedMessage = JSON.parse(message.data);
@@ -84,6 +86,18 @@ export default {
       persistent.onerror = (message) => {
         console.log("Error: cannot connect to persistent server");
       };
+    },
+    routeToRoom() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const name = urlParams.get('roomname');
+      const password = urlParams.get('roompassword');
+      // const query = this.$route.query;
+      if (name) {
+        const peers = usePeersStore();
+        const socket: any = useSocketStore().socket;
+        if (socket)
+          socket.send(JSON.stringify({ type: 'change-room', uuid: peers.getMyself.getUID(), room: name, password: password }));
+      }
     }
   }
 }

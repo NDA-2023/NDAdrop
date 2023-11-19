@@ -135,6 +135,8 @@ export default {
     createRoom() {
       const peers = usePeersStore();
       const socket: any = useSocketStore().socket;
+      peers.room.name = this.room;
+      peers.room.password = this.password;
       if (socket)
         socket.send(JSON.stringify({ type: 'change-room', uuid: peers.getMyself.getUID(), room: this.room, password: this.password }));
     },
