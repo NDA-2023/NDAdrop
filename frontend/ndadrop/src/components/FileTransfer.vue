@@ -131,10 +131,10 @@ export default {
       chats.showingRoom = !chats.showingRoom;
     },
     createRoom() {
-        const peers = usePeersStore();
-        const socket: any = useSocketStore().socket;
-        if(socket)
-            socket.send(JSON.stringify({ type: 'change-room', uuid: peers.getMyself.getUID(), room: this.room, password: this.password}));
+      const peers = usePeersStore();
+      const socket: any = useSocketStore().socket;
+      if (socket)
+        socket.send(JSON.stringify({ type: 'change-room', uuid: peers.getMyself.getUID(), room: this.room, password: this.password }));
     },
   }
 }
@@ -166,15 +166,17 @@ export default {
   </Transition>
 
   <div class="controls">
-    <button class="btn" @click="toggleRoom()">
-      <IconRoom />
-    </button>
-    <button class="btn" @click="toggleQR()">
-      <IconQR />
-    </button>
+    <div class="d-flex justify-content-center">
+      <button class="btn" @click="toggleRoom()">
+        <IconRoom />
+      </button>
+      <button class="btn" @click="toggleQR()">
+        <IconQR />
+      </button>
+    </div>
   </div>
 
-  
+
   <!-- Peerlist -->
   <div class="file-transfer container">
     <!-- <h4>Peer List</h4> -->
@@ -322,6 +324,4 @@ export default {
 .fade-leave-to {
   opacity: 0;
 }
-
-
 </style>
