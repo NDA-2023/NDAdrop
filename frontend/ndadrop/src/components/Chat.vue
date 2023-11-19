@@ -1,6 +1,5 @@
 <script lang="ts">
 import MessageVue from './Message.vue';
-import { mapState } from 'pinia'
 import { usePeersStore } from '@/stores/PeersStore'
 import { useChatStore } from '@/stores/ChatStore';
 import { useSocketStore } from '@/stores/SocketStore';
@@ -8,12 +7,14 @@ import { Peer } from '@/logic/Peer';
 import type { Message as MessageType } from '@/logic/Message';
 import IconQR from './icons/IconQR.vue';
 import IconHistory from './icons/IconHistory.vue';
+import IconRoom from './icons/IconRoom.vue';
 import QR from './QR.vue';
 
 export default {
   components: {
     IconHistory: IconHistory,
     IconQR: IconQR,
+    IconRoom: IconRoom,
     MessageVue: MessageVue,
     QR
   },
@@ -70,6 +71,10 @@ export default {
     toggleQR() {
       const chats = useChatStore()
       chats.showingQR = !chats.showingQR;
+    },
+    toggleRoom() {
+      const chats = useChatStore()
+      chats.showingRoom = !chats.showingRoom;
     }
   }
 }
@@ -79,6 +84,9 @@ export default {
   <div class="list-group">
     <div class="chat-background overflow-scroll">
       <div class="d-flex justify-content-end">
+        <button class="btn" @click="toggleRoom()">
+          <IconRoom />
+        </button>
         <button class="btn" @click="toggleQR()">
           <IconQR />
         </button>

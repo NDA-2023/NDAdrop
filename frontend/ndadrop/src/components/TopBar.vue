@@ -2,11 +2,11 @@
 </script>
 
 <template>
-  <div class="greetings logoTitle">
-    <img alt="NDA drop logo" class="logo" src="@/assets/logo.svg" width="75" height="75" />
+  <div class="d-flex justify-content-center header">
+    <img alt="NDA drop logo" class="logo" src="@/assets/logo.svg" />
     <div>
-      <h1 class="green">NDA Drop</h1>
-      <h3>
+      <h1 class="green title">NDA Drop</h1>
+      <h3 class="subtitle">
         P2P file sharing and chat communication.
       </h3>
     </div>
@@ -36,21 +36,39 @@ h3 {
   margin: 0 auto;
 }
 
-.logoTitle {
+.logo {
+  width: 40px;
+  height: 40px;
+}
+
+.header {
   display: flex;
   place-items: center;
 }
 
+.title {
+  font-size: 3vh;
+}
+
+.subtitle {
+  font-size: 2vh;
+}
+
 @media (min-width: 1024px) {
 
-  .greetings h1,
-  .greetings h3 {
+  .h1,
+  .h3 {
     text-align: left;
   }
 
-  .greetings {
+  .header {
     margin: 0;
     min-width: 500px;
+  }
+
+  .logo {
+    width: 75px;
+    height: 75px;
   }
 }
 </style>

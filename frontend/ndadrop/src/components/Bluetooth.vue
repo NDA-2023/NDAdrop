@@ -5,7 +5,7 @@ const { isSupported, isConnected, device, requestDevice, server, error } =
     useBluetooth({
         acceptAllDevices: true,
         //filters: [ {services: ['12345678-1234-5678-1234-56789abcdef0'],}],
-        optionalServices: ['battery_service', '12345678-1234-5678-1234-56789abcdef0', 'immediate_alert']
+        optionalServices: ['battery_service', 'object_transfer', 'immediate_alert']
         // optionalServices: ['battery_service', 'object_transfer'],
     })
 const batteryPercent = ref<undefined | number>()
@@ -41,7 +41,13 @@ async function getBatteryLevels() {
     isConnecting.value = false;
 
     console.log(await (server.value.device.gatt).getPrimaryServices());
-    const objectTransfer = await (server.value.device.gatt).getPrimaryService('immediate_alert')
+    
+    try {
+        const objectTransfer = await (server.value.device.gatt).getPrimaryService('object_transfer')
+    } catch (err) {
+        error.value = err;
+        error.value += '(object transfer)';
+    }
 
 }
 const { stop } = pausableWatch(isConnected, (newIsConnected) => {

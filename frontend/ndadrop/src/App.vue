@@ -11,7 +11,6 @@ import { File } from './logic/File';
 import { Message } from './logic/Message';
 import { DateTime } from 'luxon';
 
-
 //TODO: toaster fixen
 
 //TODO: Timestamp die niet meer werkt? -> opl. bijhouden op signaling server (op joining client zijn ze enkel fout)
@@ -53,6 +52,9 @@ export default {
             break;
           case "chat-message":
             receivedChatMessage(parsedMessage);
+            break;
+          case "room-status":
+            receivedRoomStatus(parsedMessage.roomActive);
             break;
           default:
             createReceivingWebsocket(parsedMessage);
@@ -155,6 +157,10 @@ function receivedSessionMessages(sessions: any) {
   chat.sessions = arraySessions;
 }
 
+function receivedRoomStatus(roomActive: boolean) {
+  usePeersStore().roomActive = roomActive;
+}
+
 
 
 </script>
@@ -194,7 +200,7 @@ nav {
   width: 100%;
   font-size: 12px;
   text-align: center;
-  margin-top: 2rem;
+  /* margin-top: 2rem; */
 }
 
 nav a.router-link-exact-active {

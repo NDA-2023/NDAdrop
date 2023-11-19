@@ -9,10 +9,10 @@ import { useSocketStore } from '@/stores/SocketStore';
     <!-- <TheWelcome /> -->
     <div class="container">
       <div class="row justify-content-center">
-        <div class="col-8">
+        <div class="col">
           <FileTransfer />
         </div>
-        <div class="chat col">
+        <div class="chat col-5">
           <Chat />
         </div>
       </div>

@@ -5,18 +5,24 @@ import FileUploadToast from '@/components/FileUploadToast.vue';
 import { Popover } from 'bootstrap';
 import { usePeersStore } from '@/stores/PeersStore'
 import { useFileStore } from '@/stores/FileStore';
+import { useSocketStore } from '@/stores/SocketStore';
 import type { Peer } from '@/logic/Peer';
 import { importSimplePeer } from '@/plugins/simplePeerPlugin';
 import { v1 as uuid } from 'uuid';
 import QR from '@/components/QR.vue';
-
 import { useChatStore } from '@/stores/ChatStore';
+import IconLock from './icons/IconLock.vue';
+import IconQR from './icons/IconQR.vue';
+import IconRoom from './icons/IconRoom.vue';
 
 export default {
   components: {
     PeerList: PeerList,
     FileUploadToast: FileUploadToast,
     QR: QR,
+    IconLock: IconLock,
+    IconQR: IconQR,
+    IconRoom: IconRoom,
   },
   // data() {
   //     return {
@@ -28,7 +34,8 @@ export default {
     fileNames: [] as Array<string>,
     sendingFiles: [] as Array<any>,
     popover: null as Popover | null,
-
+    room: '' as string,
+    password: '' as string,
   }),
   computed: {
     computedSendingFiles() {
@@ -37,6 +44,12 @@ export default {
     },
     showingQR() {
       return useChatStore().showingQR;
+    },
+    showingRoom() {
+      return useChatStore().showingRoom;
+    },
+    roomActive() {
+      return usePeersStore().roomActive;
     },
     /**
      * returns all the fileNames in the fileNames array as a single string with ', ' between every fileName
@@ -108,11 +121,61 @@ export default {
         })
       });
       this.cancelFile();
-    }
+    },
+    toggleQR() {
+      const chats = useChatStore()
+      chats.showingQR = !chats.showingQR;
+    },
+    toggleRoom() {
+      const chats = useChatStore()
+      chats.showingRoom = !chats.showingRoom;
+    },
+    createRoom() {
+        const peers = usePeersStore();
+        peers.room.name = this.room;
+        peers.room.password = this.password;
+        const socket: any = useSocketStore().socket;
+        if(socket)
+            socket.send(JSON.stringify({ type: 'change-room', room: peers.room.name, password: peers.room.password}));
+    },
   }
 }
 </script>
 <template>
+  <!-- Room Control -->
+  <Transition name="fade" mode="out-in">
+    <div v-if="roomActive" class="d-flex justify-content-center roomStatus">
+      You are now in a room
+      <IconLock class="lock" />
+    </div>
+  </Transition>
+  <Transition name="fade" mode="out-in">
+    <div v-if="showingRoom" class="roomControl">
+      <div class="d-flex justify-content-center">
+        <div class="mb-1 me-1 mt-1">
+          <input type="email" class="form-control green roomControlText" id="roomName" aria-describedby="roomName"
+            placeholder="Room Name">
+        </div>
+        <div class="mb-1 mt-1">
+          <input type="password" class="form-control green roomControlText" id="roomPassword"
+            placeholder="Room's Password">
+        </div>
+        <div class="mb-1 mt-1">
+          <button class="btn green" @click="createRoom()">Create Room</button>
+        </div>
+      </div>
+    </div>
+  </Transition>
+
+  <div class="controls">
+    <button class="btn" @click="toggleRoom()">
+      <IconRoom />
+    </button>
+    <button class="btn" @click="toggleQR()">
+      <IconQR />
+    </button>
+  </div>
+
   <!-- Peerlist -->
   <div class="file-transfer container">
     <!-- <h4>Peer List</h4> -->
@@ -155,7 +218,7 @@ export default {
 
 <style scoped>
 .file-transfer {
-  margin: 1rem;
+  margin-top: 1rem;
 }
 
 .fill {
@@ -209,9 +272,45 @@ export default {
   padding-bottom: 120px;
 }
 
+.roomControl {
+  border-radius: 15px;
+}
+
+.roomControlText::placeholder {
+  color: white;
+  text-align: center;
+}
+
+.roomStatus {
+  color: hsla(160, 100%, 37%, 1);
+}
+
+.lock {
+  margin-top: 5px;
+  margin-left: 5px;
+  color: hsla(160, 100%, 37%, 1);
+}
+
+.controls {
+  display: block;
+}
+
+.roomControlInBetween {
+  margin-top: 10px;
+  display: none;
+}
+
 @media (min-width: 1024px) {
   .toast-container {
     padding-bottom: 0;
+  }
+
+  .roomControlInBetween {
+    display: block;
+  }
+
+  .controls {
+    display: none;
   }
 }
 
@@ -224,4 +323,6 @@ export default {
 .fade-leave-to {
   opacity: 0;
 }
+
+
 </style>

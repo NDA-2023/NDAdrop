@@ -14,7 +14,7 @@ export default {
 }
 </script>
 <template>
-    <div class="mt-4 pt-4 d-flex justify-content-center">
+    <div class="mt-1 d-flex justify-content-center">
         <div class="card p-4 background green">
             <qrcode-vue background="transparent" foreground="white" :value="value" :size="size" level="H" />
             <div class="subtitle">
