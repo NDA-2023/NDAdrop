@@ -12,31 +12,16 @@ import { Message } from './logic/Message';
 import { DateTime } from "luxon";
 import { useScreenShareStore } from './stores/ScreenShareStore';
 import { ScreenShare } from './logic/ScreenShare';
+import VideoStream from '@/components/VideoStream.vue'
 
 export default {
   components: {
-    TopBar: TopBar
+    TopBar: TopBar,
+    VideoStream
   },
   computed: {
     screenShares() {
-      // Assuming useScreenShareStore() returns a store with a 'getScreenShares' method
       return useScreenShareStore().getScreenShares;
-    },
-  },
-  watch: {
-    // Watch for changes in the screenShare objects
-    'screenShares': {
-      deep: true,
-      handler(newScreenShares, oldScreenShares) {
-        // Check for stream and update hasStream property
-        newScreenShares.forEach((screenShare: ScreenShare, index: number) => {
-          console.log(index);
-          if (screenShare.stream) {
-            console.log("Has stream", screenShare.stream);
-            screenShare.hasStream += 1;
-          }
-        });
-      },
     },
   },
   // computed: {
@@ -48,8 +33,6 @@ export default {
     const randomIndex = Math.floor(Math.random() * randomNames.length);
     peers.addNewPeer('', randomNames[randomIndex], false, true);
     console.log("My UUID: ", peers.getMyself.getUID());
-    // const chat = useChatStore();
-    // chat.addMessage(peers.getPeerViaIndex(1) as Peer, "Interlinked");
   },
   mounted() {
     this.setupWebsocketServer();
@@ -92,15 +75,14 @@ export default {
               }
            } else {
             let sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
-            console.log(useScreenShareStore().screens);
+            // console.log(useScreenShareStore().screens);
             if (!sendingPeer) {
               importSimplePeer(false).then((peerInstance) => {
                 sendingPeer = useScreenShareStore().getScreenShareOnUUID(parsedMessage.screenShareID);
                 if (!sendingPeer){
                   console.log("Create receiving screenshare socket: ", parsedMessage.screenShareID);
-                  let peer = new ScreenShare(parsedMessage.screenShareID, usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance, this.addVideoTag(parsedMessage.screenShareID));
+                  let peer = new ScreenShare(parsedMessage.screenShareID, usePeersStore().getPeerViaUID(parsedMessage.to) as Peer, peerInstance);
                   useScreenShareStore().addScreenShare(peer);
-                  // console.log(useScreenShareStore().screens);
                   peer.websocket.signal(parsedMessage.data);
                 } else
                   sendingPeer.websocket.signal(parsedMessage.data);
@@ -116,18 +98,6 @@ export default {
       ws.onerror = (message) => {
         console.log("Error: cannot connect to signaling server");
       };
-    },
-    addVideoTag(id: string) {
-      // Create a new video element
-      const newVideo = document.createElement('video');
-      // Set attributes for the video element
-      newVideo.muted = true;
-      newVideo.controls = true;
-      // Set a unique ref for the video element
-      const refName = `video-${id}`;
-      newVideo.setAttribute('ref', refName);
-      newVideo.classList.add('VideoStream');
-      return newVideo;
     },
     setupPersistentServer() {
       const persistent = new WebSocket('wss://main-bvxea6i-ivztmacy7gpi6.de-2.platformsh.site/ws-persistent');
@@ -222,37 +192,17 @@ function receivedSessionMessages(sessions: any) {
       <component :is="Component" :key="$route.path"></component>
     </Transition>
   </RouterView>
-  <!-- <div v-show="screenShares.length > 0">
-    <h2>Video Streams</h2>
-    <ul id="VideoStreamList">
-    </ul>
-  </div> -->
+
+  <br/>
   <div v-show="screenShares.length > 0 && screenShares.some(screenShare => !screenShare.websocket.initiator)">
-    <h2>Video Streams</h2>
+    <h3>Active Video Streams:</h3>
     <ul>
-      <li v-for="screenShare in screenShares" :key="screenShare.getUUID()">
-        <template v-if="!screenShare.websocket.initiator">
-          <span> {{ screenShare.getPeer().getName() }} is screen sharing with you</span>
-          <video class="VideoStream" :key="`${screenShare.getUUID()}-${screenShare.hasStream}`"  :srcObject="screenShare.stream" autoplay muted controls></video>
-        </template>
+      <li v-for="screenShare in screenShares" :key="`${screenShare.getUUID()}-${Date.now()}`">
+        <VideoStream :screenshare="(screenShare as ScreenShare)"> </VideoStream>
       </li>
     </ul>
   </div>
 
-  <!-- <div v-show="screenShares.length > 0 && screenShares.some(screenShare => !screenShare.websocket.initiator)">
-    <h2>Active Video Streams</h2>
-    <ul class="stream-list">
-      <li v-for="screenShare in screenShares" :key="screenShare.getUUID()" class="stream-item"> 
-        <template v-if="!screenShare.websocket.initiator">
-          <div class="stream-info">
-            <p class="stream-status" v-if="screenShare.hasStream">{{ screenShare.getPeer().getName() }} is screen sharing with you</p>
-            <p class="stream-status" v-else>Pending screen sharing...</p>
-          </div>
-          <video class="VideoStream" v-if="screenShare.hasStream" :srcObject="screenShare.stream" autoplay muted controls></video>
-        </template>
-      </li>
-    </ul>
-  </div> -->
 </template>
 
 <style scoped>

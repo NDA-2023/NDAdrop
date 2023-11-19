@@ -8,7 +8,7 @@
     <div>
       <h1 class="green">NDA Drop</h1>
       <h3>
-        P2P file/screen sharing and chat communication.
+        P2P sharing and chat communication.
       </h3>
     </div>
   </div>

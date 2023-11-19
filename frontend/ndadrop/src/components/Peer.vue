@@ -19,6 +19,7 @@ export default {
         return {
             myName: this.peer.getName(),
             isScreenShareActive: false,
+            isFaceShareActive: false,
             // screenShareStream: null as MediaStream | null,
         };
     },
@@ -44,7 +45,7 @@ export default {
                     
                     // this.screenShareStream = stream; // Store the screen sharing stream
                     importSimplePeer(true, stream).then((peerInstance) => {
-                        let screenShareSocket = new ScreenShare('', this.peer, peerInstance, null);
+                        let screenShareSocket = new ScreenShare('', this.peer, peerInstance);
                         useScreenShareStore().addScreenShare(screenShareSocket);
                     }).catch((error) => {
                         console.error('Error getting SimplePeer: ', error);
@@ -56,6 +57,37 @@ export default {
                 });
             } else {
             console.log("Stopping screen share with ", this.peer.getName());
+                let screenShare = useScreenShareStore().getScreenShareOnPeer(this.peer);
+                if (screenShare){
+                    useScreenShareStore().removeScreenShareOnUUID(screenShare.getUUID())
+                    screenShare.websocket.destroy();
+                    console.log(useScreenShareStore().screens)
+                }
+                // if (this.screenShareStream)
+                //     this.screenShareStream = null
+            }
+        },
+        handleFaceShareClick() {
+            this.isFaceShareActive = !this.isFaceShareActive;
+            if (this.isFaceShareActive){
+                console.log("Staring camera share with ", this.peer.getName());
+                navigator.mediaDevices.getUserMedia({ video: true })
+                .then((stream) => {
+                     
+                    // this.screenShareStream = stream; // Store the screen sharing stream
+                    importSimplePeer(true, stream).then((peerInstance) => {
+                        let screenShareSocket = new ScreenShare('', this.peer, peerInstance);
+                        useScreenShareStore().addScreenShare(screenShareSocket);
+                    }).catch((error) => {
+                        console.error('Error getting SimplePeer: ', error);
+                    });
+
+                }).catch((error) => {
+                  console.error('Error running camera share:', error);
+                  this.isFaceShareActive = false;
+                });
+            } else {
+            console.log("Stopping camera share with ", this.peer.getName());
                 let screenShare = useScreenShareStore().getScreenShareOnPeer(this.peer);
                 if (screenShare){
                     useScreenShareStore().removeScreenShareOnUUID(screenShare.getUUID())
@@ -100,7 +132,8 @@ export default {
             <!-- If that peer is not selected -->
             <div v-if="!peer.isSelected()">
                 <button type="button" class="list-group-item list-group-item-action lg" style="display: flex; align-items: center;" @click="selectPeer">
-                    <RoundButton :isActive="isScreenShareActive" @screenshare-click="handleScreenShareClick" :peer="peer" />
+                    <RoundButton :isActive="isScreenShareActive" @screenshare-click="handleScreenShareClick" :peer="peer" :IsScreenShare="true" />
+                    <RoundButton :isActive="isFaceShareActive" @screenshare-click="handleFaceShareClick" :peer="peer" :IsScreenShare="false" />
                     <div>
                         <div class="ms-2 me-auto">
                             <div class="fw-bold">{{ peer.getName() }}</div>

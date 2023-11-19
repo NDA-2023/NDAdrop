@@ -8,20 +8,18 @@ export class ScreenShare {
     private UID: string;
     private peer: Peer;
     public websocket: any;
-    public videoPlayer: any;
-    public hasStream: number = 0;
+    public hasStream: boolean = false;
     public stream: any = null;
   
-    constructor(UUID:string, toPeer: Peer, websocket: any, videoPlayer: any) {
+    constructor(UUID:string, toPeer: Peer, websocket: any) {
         if (UUID.length == 0)
             this.UID = uuid();
         else
             this.UID = UUID;
         this.peer = toPeer;
-        this.videoPlayer = videoPlayer;
         this.websocket = websocket;
         this.setupEventListeners();
-    }
+    } 
 
     public getUUID(): string {
         return this.UID;
@@ -55,7 +53,7 @@ export class ScreenShare {
                 if (!this.websocket.initiator){
                     // this.videoPlayer.srcObject = stream;
                     this.stream = stream;
-                    this.hasStream = 1;
+                    this.hasStream = true;
                     console.log("Stream found")
                     // this.videoPlayer.play();
                 }
