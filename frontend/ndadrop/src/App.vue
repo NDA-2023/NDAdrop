@@ -113,7 +113,7 @@ function createReceivingWebsocketForVideoStream(parsedMessage: any) {
         peer.websocket.signal(parsedMessage.data);
 
         try {
-          let audio = new Audio('../src/assets/stream.mp3');
+          let audio = new Audio('../assets/stream.mp3');
           audio.play();
         } catch (err) { }
       }
@@ -160,7 +160,7 @@ function updateOnlineUsersList(onlineUsers: any) {
     if (!foundUser) {
       peersStore.addNewPeer(user[0], user[1], false, false);
       try {
-        let audio = new Audio('../src/assets/join.mp3');
+        let audio = new Audio('../assets/join.mp3');
         audio.play();
       } catch (err) { }
     } else {
@@ -181,7 +181,7 @@ function updateOnlineUsersList(onlineUsers: any) {
 
 function receivedChatMessage(message: any) {
   try {
-    let audio = new Audio('../src/assets/message.mp3');
+    let audio = new Audio('../assets/message.mp3');
     audio.play();
   } catch (err) { }
   const peers = usePeersStore();

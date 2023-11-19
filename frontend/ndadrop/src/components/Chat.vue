@@ -41,7 +41,7 @@ export default {
   methods: {
     sendMessage() {
       try {
-        let audio = new Audio('../src/assets/message.mp3');
+        let audio = new Audio('../assets/message.mp3');
         audio.play();
       } catch (err) {}
 
